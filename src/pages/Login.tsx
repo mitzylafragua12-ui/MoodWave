@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
 import { asset } from '../lib/paths';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -12,8 +12,10 @@ import { t } from '../i18n';
 export function AuthHero() {
   return (
     <div className="auth-hero">
-      <div className="brand"><img src={asset('icon.svg')} alt="" style={{ width: 44, height: 44 }} /><span>Mood<b>Wave</b></span></div>
-      <div className="tagline">Ride your emotions</div>
+      <h1 className="sr-only">MoodWave</h1>
+      {/* Dos versiones del logo: transparente para el tema oscuro y en tarjeta para el claro (solo se descarga la del tema activo). */}
+      <div className="auth-logo" role="img" aria-label="MoodWave — Ride your emotions. Scan your mood · Find your flow"
+        style={{ '--logo-dark': `url(${asset('logo-alpha.webp')})`, '--logo-light': `url(${asset('logo.webp')})` } as CSSProperties} />
     </div>
   );
 }

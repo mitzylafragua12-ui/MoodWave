@@ -51,7 +51,7 @@ export function Layout() {
     <div className="app-shell">
       <a href="#contenido" className="sr-only">{t('Saltar al contenido')}</a>
       <aside className={`sidebar${open ? ' open' : ''}`} aria-label={t('Navegación principal')}>
-        <Link to="/" className="brand"><img src={asset('icon.svg')} alt="" /><span>Mood<b>Wave</b></span></Link>
+        <Link to="/" className="brand"><img src={asset('logo-mark.webp')} alt="" /><span>Mood<b>Wave</b></span></Link>
         {link(home)}
         {work.length > 0 && <div className="nav-section">{t('Mi trabajo')}</div>}
         {work.map(link)}
@@ -72,7 +72,7 @@ export function Layout() {
 
       <div className="main">
         <div className="topbar">
-          <Link to="/" className="brand" style={{ fontSize: '1.2rem' }}><img src={asset('icon.svg')} alt="" /><span>Mood<b>Wave</b></span></Link>
+          <Link to="/" className="brand" style={{ fontSize: '1.2rem' }}><img src={asset('logo-mark.webp')} alt="" /><span>Mood<b>Wave</b></span></Link>
           <button className="icon-btn" aria-label={t('Abrir menú')} aria-expanded={open} onClick={() => setOpen(true)}>☰</button>
         </div>
         {profile.suspended && (

@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg'],
+      includeAssets: ['favicon-64.png', 'apple-touch-icon.png', 'logo-mark.webp', 'logo.webp', 'logo-alpha.webp'],
       manifest: {
         name: 'MoodWave — Ride your emotions',
         short_name: 'MoodWave',

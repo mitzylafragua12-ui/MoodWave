@@ -285,6 +285,17 @@ Si el minijuego se elige sin detección, se muestra un selector con los 7. Cada 
 
 ---
 
+## Logo
+
+El logo original del equipo está recortado en `public/`:
+
+| Archivo | Dónde se usa |
+|---|---|
+| `logo-alpha.webp` | Pantallas de entrada en tema oscuro (fondo transparente, se funde con la página) |
+| `logo.webp` | Pantallas de entrada en tema claro (tarjeta con el fondo azul original) |
+| `logo-mark.webp` | Ícono junto a «MoodWave» en el menú |
+| `favicon-64.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` | Pestaña del navegador e ícono de la app instalada (PWA) |
+
 ## Estructura
 
 ```
