@@ -155,12 +155,14 @@ create table if not exists public.users (
   last_active_date date,
   suspended        boolean not null default false,
   -- Preferencias de la persona (Perfil → Configuración)
-  language         text not null default 'es' check (language in ('es','en')),
+  language         text not null default 'es' check (language in ('es','en','pt','fr','de','it')),
   theme            text not null default 'dark' check (theme in ('dark','light','system')),
   created_at       timestamptz not null default now()
 );
 -- Instalaciones anteriores: añade las preferencias si no existían.
-alter table public.users add column if not exists language text not null default 'es' check (language in ('es','en'));
+alter table public.users add column if not exists language text not null default 'es';
+alter table public.users drop constraint if exists users_language_check;
+alter table public.users add constraint users_language_check check (language in ('es','en','pt','fr','de','it'));
 alter table public.users add column if not exists theme text not null default 'dark' check (theme in ('dark','light','system'));
 
 create table if not exists public.detections (
@@ -963,7 +965,7 @@ begin
   insert into public.users (id, username, display_name, role_id, language, theme)
   values (new.id, v_username, coalesce(new.raw_user_meta_data->>'display_name', v_username),
           case when coalesce(new.is_anonymous, false) then 1 else 2 end,
-          case when new.raw_user_meta_data->>'language' in ('es','en') then new.raw_user_meta_data->>'language' else 'es' end,
+          case when new.raw_user_meta_data->>'language' in ('es','en','pt','fr','de','it') then new.raw_user_meta_data->>'language' else 'es' end,
           case when new.raw_user_meta_data->>'theme' in ('dark','light','system') then new.raw_user_meta_data->>'theme' else 'dark' end);
   return new;
 end $$;

@@ -2,8 +2,7 @@
 import type { ActivityKey, Badge, EmotionKey, Playlist, RoleKey } from './types';
 import { translated } from '../i18n/translated';
 import { t } from '../i18n';
-import { BADGES_EN } from '../i18n/en';
-import { getLang } from '../i18n';
+import { badgeTranslation, getLang } from '../i18n';
 
 export interface EmotionInfo { id: number; key: EmotionKey; label: string; color: string; emoji: string }
 export const EMOTIONS: EmotionInfo[] = ([
@@ -145,11 +144,12 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
 ];
 
 /** Nombre y descripción de un logro en el idioma actual (los de la base están en español). */
-export const badgeName = (b: Badge) => (getLang() === 'en' && BADGES_EN[b.key]?.name) || b.name;
-export const badgeDescription = (b: Badge) => (getLang() === 'en' && BADGES_EN[b.key]?.description) || b.description;
+export const badgeName = (b: Badge) => badgeTranslation(b.key)?.name || b.name;
+export const badgeDescription = (b: Badge) => badgeTranslation(b.key)?.description || b.description;
 /** «Panel de orientador» / «Counselor panel» (en español va en minúscula). */
 export const rolePanelLabel = (role: RoleKey) =>
-  t('Panel de {role}', { role: getLang() === 'en' ? ROLE_BY_KEY[role].name : ROLE_BY_KEY[role].name.toLowerCase() });
+  // En inglés y alemán el nombre del rol va con mayúscula inicial.
+  t('Panel de {role}', { role: ['en', 'de'].includes(getLang()) ? ROLE_BY_KEY[role].name : ROLE_BY_KEY[role].name.toLowerCase() });
 
 /** Motivo de una recomendación (viene de la base en español). */
 export const reasonText = (es: string) => t(es);

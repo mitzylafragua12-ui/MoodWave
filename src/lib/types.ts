@@ -17,7 +17,7 @@ export interface Profile {
   last_active_date: string | null;
   suspended: boolean;
   created_at: string;
-  language: 'es' | 'en';
+  language: 'es' | 'en' | 'pt' | 'fr' | 'de' | 'it';
   theme: 'dark' | 'light' | 'system';
 }
 

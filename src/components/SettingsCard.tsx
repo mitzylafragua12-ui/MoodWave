@@ -2,7 +2,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { usePrefs } from '../context/PreferencesContext';
 import { errMsg, useToast } from '../context/ToastContext';
-import { LANGS, t, type Lang } from '../i18n';
+import { LANGS, isLang, t, type Lang } from '../i18n';
 import type { Theme } from '../i18n/theme';
 
 const THEMES: { key: Theme; label: string; icon: string }[] = [
@@ -35,11 +35,10 @@ export function SettingsCard() {
       <p className="small muted mb0">{t('Se guarda en tu cuenta y se aplica en todos tus dispositivos.')}</p>
       <div className="pref-row">
         <span>🌐 {t('Idioma')}</span>
-        <div className="seg-inline" role="group" aria-label={t('Idioma')}>
-          {LANGS.map((l) => (
-            <button key={l.key} aria-pressed={lang === l.key} onClick={() => saveLang(l.key)}>{l.label}</button>
-          ))}
-        </div>
+        <select className="input lang-select" value={lang} aria-label={t('Idioma')}
+          onChange={(e) => { if (isLang(e.target.value)) saveLang(e.target.value); }}>
+          {LANGS.map((l) => <option key={l.key} value={l.key}>{l.flag} {l.label}</option>)}
+        </select>
       </div>
       <div className="pref-row">
         <span>🎨 {t('Tema')}</span>
@@ -61,9 +60,10 @@ export function AuthPrefs() {
   const dark = theme === 'dark' || (theme === 'system' && document.documentElement.dataset.theme === 'dark');
   return (
     <div className="auth-prefs">
-      <div className="seg-inline" role="group" aria-label={t('Idioma')}>
-        {LANGS.map((l) => <button key={l.key} aria-pressed={lang === l.key} onClick={() => setLang(l.key)}>{l.key.toUpperCase()}</button>)}
-      </div>
+      <select className="input lang-select" value={lang} aria-label={t('Idioma')}
+        onChange={(e) => { if (isLang(e.target.value)) setLang(e.target.value); }}>
+        {LANGS.map((l) => <option key={l.key} value={l.key}>{l.flag} {l.label}</option>)}
+      </select>
       <button className="btn btn-ghost btn-sm" aria-label={t('Tema')} title={t(dark ? 'Claro' : 'Oscuro')} onClick={() => setTheme(dark ? 'light' : 'dark')}>
         {dark ? '☀️' : '🌙'}
       </button>

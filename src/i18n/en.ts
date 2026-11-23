@@ -715,3 +715,6 @@ export const BADGES_EN: Record<string, { name: string; description: string }> = 
   level_5: { name: "Swell", description: "Reach level 5." },
   level_10: { name: "MoodWave Legend", description: "Reach level 10." },
 };
+
+import type { Locale } from './types';
+export const EN_LOCALE: Locale = { label: 'English', locale: 'en-US', dict: EN, patterns: EN_PATTERNS, badges: BADGES_EN };

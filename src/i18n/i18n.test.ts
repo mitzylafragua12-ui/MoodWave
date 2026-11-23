@@ -1,8 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { EN, BADGES_EN } from './en';
-import { setLang, t } from './index';
+import { ALL_LOCALES, setLang, t } from './index';
 import { ACTIVITIES, DEFAULT_BADGES, EMOTIONS, JOURNAL_PROMPTS, RECOMMENDATIONS, ROLES } from '../lib/catalog';
 import { LEVEL_NAMES } from '../lib/gamification';
 
@@ -30,11 +29,16 @@ function usedKeys(): Set<string> {
 }
 
 describe('traducciones al inglés', () => {
-  it('cada texto de la interfaz tiene traducción', () => {
-    const missing = [...usedKeys()].filter((k) => !(k in EN));
+  it.each(Object.entries(ALL_LOCALES))('%s: cada texto de la interfaz tiene traducción', (_, loc) => {
+    const missing = [...usedKeys()].filter((k) => !(k in loc.dict));
     expect(missing).toEqual([]);
   });
-  it('los catálogos están traducidos', () => {
+  it.each(Object.entries(ALL_LOCALES))('%s: las variables {…} coinciden con el español', (_, loc) => {
+    const vars = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join(',');
+    const bad = Object.entries(loc.dict).filter(([es, tr]) => vars(es) !== vars(tr)).map(([es]) => es);
+    expect(bad).toEqual([]);
+  });
+  it.each(Object.entries(ALL_LOCALES))('%s: los catálogos están traducidos', (_, loc) => {
     setLang('es');
     const texts = [
       ...EMOTIONS.map((e) => e.label), ...ACTIVITIES.flatMap((a) => [a.name, a.description]),
@@ -42,8 +46,8 @@ describe('traducciones al inglés', () => {
       ...Object.values(RECOMMENDATIONS).flatMap((rs) => rs.map(([, reason]) => reason)),
       ...Object.values(JOURNAL_PROMPTS).flat(),
     ];
-    expect(texts.filter((x) => !(x in EN))).toEqual([]);
-    expect(DEFAULT_BADGES.filter((b) => !BADGES_EN[b.key]).map((b) => b.key)).toEqual([]);
+    expect(texts.filter((x) => !(x in loc.dict))).toEqual([]);
+    expect(DEFAULT_BADGES.filter((b) => !loc.badges[b.key]).map((b) => b.key)).toEqual([]);
   });
   it('traduce con variables y mensajes del servidor', () => {
     setLang('en');
@@ -52,6 +56,14 @@ describe('traducciones al inglés', () => {
     expect(t('Texto sin traducción')).toBe('Texto sin traducción');
     expect(EMOTIONS[0].label).toBe('Happy');
     expect(LEVEL_NAMES[2]).toBe('Tide');
+    setLang('pt');
+    expect(t('Hola, {name}', { name: 'Mitzy' })).toBe('Olá, Mitzy');
+    setLang('fr');
+    expect(t('Duración insuficiente: mínimo 60 segundos')).toBe('Durée insuffisante : au moins 60 secondes');
+    setLang('de');
+    expect(EMOTIONS[1].label).toBe('Traurigkeit');
+    setLang('it');
+    expect(LEVEL_NAMES[0]).toBe('Brezza');
     setLang('es');
     expect(EMOTIONS[0].label).toBe('Feliz');
     expect(t('Hola, {name}', { name: 'Mitzy' })).toBe('Hola, Mitzy');

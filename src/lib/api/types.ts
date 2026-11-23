@@ -24,7 +24,7 @@ export interface Api {
 
   // Perfil
   getProfile(): Promise<Profile>;
-  updateProfile(patch: { username?: string; display_name?: string; language?: 'es' | 'en'; theme?: 'dark' | 'light' | 'system' }): Promise<void>;
+  updateProfile(patch: { username?: string; display_name?: string; language?: 'es' | 'en' | 'pt' | 'fr' | 'de' | 'it'; theme?: 'dark' | 'light' | 'system' }): Promise<void>;
 
   // Catálogos
   getBadges(): Promise<Badge[]>;
