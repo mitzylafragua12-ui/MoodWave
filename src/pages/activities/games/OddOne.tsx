@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { GameProps } from './types';
+import { t } from '../../../i18n';
 
 // NEUTRAL: encontrar el color distinto activa la atención sin estresar.
 export default function OddOne({ addScore, say }: GameProps) {
@@ -15,7 +16,7 @@ export default function OddOne({ addScore, say }: GameProps) {
   function tap(i: number) {
     if (i === board.odd) {
       addScore(1);
-      if ((level + 1) % 6 === 0) say('¡Qué buena vista!');
+      if ((level + 1) % 6 === 0) say(t('¡Qué buena vista!'));
       setLevel((l) => l + 1);
     } else {
       setShake(true);
@@ -31,7 +32,7 @@ export default function OddOne({ addScore, say }: GameProps) {
             style={{ background: i === board.odd ? board.diff : board.base }} />
         ))}
       </div>
-      <p className="game-tip" style={{ top: 'auto', bottom: 8 }}>Nivel {level + 1} · toca el cuadro de color distinto</p>
+      <p className="game-tip" style={{ top: 'auto', bottom: 8 }}>{t('Nivel')} {level + 1} {t('· toca el cuadro de color distinto')}</p>
     </div>
   );
 }

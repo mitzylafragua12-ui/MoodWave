@@ -7,9 +7,10 @@ import Breath from './Breath';
 import Wipe from './Wipe';
 import Memory from './Memory';
 import OddOne from './OddOne';
+import { translated } from '../../../i18n/translated';
 
 /** Un juego diseñado para cada una de las 7 emociones. */
-export const GAMES: GameDef[] = [
+export const GAMES: GameDef[] = ([
   { key: 'stars', emotion: 'happy', name: 'Lluvia de estrellas', icon: '⭐', seconds: 45, Component: Stars,
     why: 'Aprovecha tu buena energía con un juego ágil.', howTo: 'Mueve la canasta y atrapa las estrellas. Las doradas 🌟 valen 3.' },
   { key: 'garden', emotion: 'sad', name: 'Jardín de luz', icon: '🌸', seconds: 40, Component: Garden,
@@ -24,7 +25,7 @@ export const GAMES: GameDef[] = [
     why: 'Convierte la sorpresa en atención y orden.', howTo: 'Voltea cartas y encuentra las parejas.' },
   { key: 'odd', emotion: 'neutral', name: 'Encuentra el distinto', icon: '🎯', seconds: 45, Component: OddOne,
     why: 'Activa tu mente con un reto de atención.', howTo: 'Toca el cuadro con un color un poco distinto. Cada nivel es más difícil.' },
-];
+] as GameDef[]).map((g) => translated(g, ['name', 'why', 'howTo']));
 
 export const GAME_BY_KEY = Object.fromEntries(GAMES.map((g) => [g.key, g])) as Record<string, GameDef>;
 export const GAME_FOR_EMOTION = Object.fromEntries(GAMES.map((g) => [g.emotion, g])) as Record<EmotionKey, GameDef>;

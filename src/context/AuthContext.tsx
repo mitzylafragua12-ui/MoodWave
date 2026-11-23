@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api } from '../lib/api';
 import type { Profile } from '../lib/types';
+import { usePrefs } from './PreferencesContext';
 
 interface AuthState {
   userId: string | null;
@@ -48,6 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => { alive = false; off(); };
   }, [loadProfile]);
+
+  // Las preferencias guardadas en la cuenta (idioma y tema) mandan sobre las del navegador.
+  const { setLang, setTheme } = usePrefs();
+  useEffect(() => {
+    if (!profile) return;
+    setTheme(profile.theme);
+    setLang(profile.language);
+  }, [profile?.id, profile?.language, profile?.theme, setLang, setTheme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refresh = useCallback(() => loadProfile(userId), [loadProfile, userId]);
   const signOut = useCallback(async () => { explicitSignOut = true; await api.signOut(); setUserId(null); setProfile(null); }, []);

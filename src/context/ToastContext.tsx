@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { t } from '../i18n';
 
 interface Toast { id: number; text: string; kind: 'info' | 'error' }
 const Ctx = createContext<(text: string, kind?: Toast['kind']) => void>(() => {});
@@ -22,4 +23,5 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export const useToast = () => useContext(Ctx);
 
-export const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+/** Mensaje de error traducido (los del servidor llegan en español). */
+export const errMsg = (e: unknown) => t(e instanceof Error ? e.message : String(e));

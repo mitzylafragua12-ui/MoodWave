@@ -1,15 +1,16 @@
 // Reglas de gamificación (espejo de las funciones SQL level_for_xp / grant_xp / evaluate_badges).
 import type { Badge, BadgeRule } from './types';
+import { translatedList } from '../i18n/translated';
 
 export const DAILY_XP_CAP = 200;
 export const DAILY_CHECKIN_XP = 10;
 
 /** XP mínimo para alcanzar cada nivel (índice 0 = nivel 1). */
 export const LEVEL_THRESHOLDS = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200] as const;
-export const LEVEL_NAMES = [
+export const LEVEL_NAMES = translatedList([
   'Brisa', 'Onda', 'Marea', 'Corriente', 'Oleaje',
   'Rompiente', 'Surfista', 'Tsunami zen', 'Océano', 'Leyenda MoodWave',
-] as const;
+]);
 export const MAX_LEVEL = LEVEL_THRESHOLDS.length;
 
 export function levelForXp(xp: number): number {

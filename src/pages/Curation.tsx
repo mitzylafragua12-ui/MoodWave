@@ -5,6 +5,7 @@ import { errMsg, useToast } from '../context/ToastContext';
 import { EMOTIONS } from '../lib/catalog';
 import type { EmotionKey, Playlist } from '../lib/types';
 import { ErrorBox, PageHead, Spinner } from '../components/ui';
+import { t } from '../i18n';
 
 /** Acepta un ID o una URL de Spotify (https://open.spotify.com/playlist/ID?si=...). */
 export function parsePlaylistId(input: string): string | null {
@@ -21,15 +22,15 @@ export default function Curation() {
   async function save(emotion: EmotionKey) {
     const p = draft[emotion];
     const id = parsePlaylistId(p.spotify_playlist_id);
-    if (!id) return toast('Pega un enlace o ID de playlist de Spotify válido', 'error');
-    try { await api.updatePlaylist(emotion, id, p.title.trim() || 'Playlist'); toast('Playlist actualizada'); reload(); }
+    if (!id) return toast(t('Pega un enlace o ID de playlist de Spotify válido'), 'error');
+    try { await api.updatePlaylist(emotion, id, p.title.trim() || 'Playlist'); toast(t('Playlist actualizada')); reload(); }
     catch (e) { toast(errMsg(e), 'error'); }
   }
 
   return (
     <div className="page">
-      <PageHead eyebrow="Editor de contenido" title="Música por emoción" color="var(--green)"
-        subtitle="Define qué playlist de Spotify se recomienda para cada estado de ánimo. Pega el enlace de compartir de la playlist." />
+      <PageHead eyebrow={t('Editor de contenido')} title={t('Música por emoción')} color="var(--green)"
+        subtitle={t('Define qué playlist de Spotify se recomienda para cada estado de ánimo. Pega el enlace de compartir de la playlist.')} />
       <ErrorBox error={error} />
       {loading ? <Spinner /> : (
         <div className="grid grid-2">
@@ -40,13 +41,13 @@ export default function Curation() {
             return (
               <div key={e.key} className="card card-accent" style={{ '--accent': e.color } as CSSProperties}>
                 <h3>{e.emoji} {e.label}</h3>
-                <div className="field"><label htmlFor={`t-${e.key}`}>Título</label>
+                <div className="field"><label htmlFor={`t-${e.key}`}>{t('Título')}</label>
                   <input id={`t-${e.key}`} className="input" value={p.title} onChange={(ev) => setDraft({ ...draft, [e.key]: { ...p, title: ev.target.value } })} /></div>
-                <div className="field"><label htmlFor={`u-${e.key}`}>Enlace o ID de Spotify</label>
+                <div className="field"><label htmlFor={`u-${e.key}`}>{t('Enlace o ID de Spotify')}</label>
                   <input id={`u-${e.key}`} className="input" value={p.spotify_playlist_id} onChange={(ev) => setDraft({ ...draft, [e.key]: { ...p, spotify_playlist_id: ev.target.value } })} /></div>
                 <div className="spread">
-                  {id ? <a className="small" href={`https://open.spotify.com/playlist/${id}`} target="_blank" rel="noreferrer">Abrir en Spotify ↗</a> : <span className="small" style={{ color: 'var(--red)' }}>ID inválido</span>}
-                  <button className="btn btn-primary btn-sm" onClick={() => save(e.key)}>Guardar</button>
+                  {id ? <a className="small" href={`https://open.spotify.com/playlist/${id}`} target="_blank" rel="noreferrer">{t('Abrir en Spotify ↗')}</a> : <span className="small" style={{ color: 'var(--red)' }}>{t('ID inválido')}</span>}
+                  <button className="btn btn-primary btn-sm" onClick={() => save(e.key)}>{t('Guardar')}</button>
                 </div>
               </div>
             );

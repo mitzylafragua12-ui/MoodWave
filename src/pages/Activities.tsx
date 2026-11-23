@@ -7,6 +7,7 @@ import { errMsg, useToast } from '../context/ToastContext';
 import { ACTIVITIES, ACTIVITY_BY_KEY, EMOTION_BY_KEY } from '../lib/catalog';
 import type { ActivityKey, EmotionKey } from '../lib/types';
 import { PageHead, Spinner } from '../components/ui';
+import { t } from '../i18n';
 
 export default function Activities() {
   const [params] = useSearchParams();
@@ -37,10 +38,10 @@ export default function Activities() {
   return (
     <div className="page">
       <PageHead
-        eyebrow={info ? 'Recomendado para ti' : 'Actividades'}
+        eyebrow={info ? t('Recomendado para ti') : t('Actividades')}
         color="var(--yellow)"
-        title={info ? <>Basado en tu emoción: <span style={{ color: info.color }}>{info.emoji} {info.label}</span></> : 'Elige una actividad'}
-        subtitle={info ? 'La primera es la más adecuada para este momento, pero puedes elegir cualquiera.' : 'Haz una detección para recibir una recomendación personalizada, o elige libremente.'}
+        title={info ? <>{t('Basado en tu emoción:')} <span style={{ color: info.color }}>{info.emoji} {info.label}</span></> : t('Elige una actividad')}
+        subtitle={info ? t('La primera es la más adecuada para este momento, pero puedes elegir cualquiera.') : t('Haz una detección para recibir una recomendación personalizada, o elige libremente.')}
       />
       {loading ? <Spinner /> : (
         <div className="stack" style={{ maxWidth: 720 }}>
@@ -54,15 +55,15 @@ export default function Activities() {
                 <span className="grow">
                   <span className="row" style={{ gap: 8 }}>
                     <strong>{a.name}</strong>
-                    {primary && <span className="chip" style={{ '--c': a.color } as CSSProperties}><span className="chip-dot" />Recomendada</span>}
+                    {primary && <span className="chip" style={{ '--c': a.color } as CSSProperties}><span className="chip-dot" />{t('Recomendada')}</span>}
                   </span>
-                  <span className="small muted" style={{ display: 'block' }}>{r.reason}</span>
+                  <span className="small muted" style={{ display: 'block' }}>{t(r.reason)}</span>
                 </span>
                 <span className="small" style={{ color: 'var(--cyan)', whiteSpace: 'nowrap' }}>{busy === a.key ? '…' : `+${a.base_xp} XP ›`}</span>
               </button>
             );
           })}
-          {!info && <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => nav('/detectar')}>📷 Detectar mi emoción</button>}
+          {!info && <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => nav('/detectar')}>{t('📷 Detectar mi emoción')}</button>}
         </div>
       )}
     </div>

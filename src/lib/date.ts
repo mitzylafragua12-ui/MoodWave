@@ -1,11 +1,13 @@
+import { locale } from '../i18n';
+
 /** Día local en formato YYYY-MM-DD. */
 export const localDay = (d: Date | string = new Date()) => new Date(d).toLocaleDateString('en-CA');
 
 export const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  new Date(iso).toLocaleString(locale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 export const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  new Date(iso).toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
 
 export const fmtDuration = (sec: number) => {
   const m = Math.floor(sec / 60);
@@ -26,5 +28,5 @@ export function lastDays(n: number): string[] {
 
 export const weekdayShort = (day: string) => {
   const [y, m, d] = day.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', '');
+  return new Date(y, m - 1, d).toLocaleDateString(locale(), { weekday: 'short' }).replace('.', '');
 };

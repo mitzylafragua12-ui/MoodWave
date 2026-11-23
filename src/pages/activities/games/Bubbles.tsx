@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { pick, type GameProps } from './types';
+import { t } from '../../../i18n';
 
 // ENOJO: reventar burbujas con lo que molesta libera tensión de forma segura.
 const WORRIES = ['estrés', 'prisa', 'enojo', 'presión', 'ruido', 'culpa', 'tareas', 'injusto', 'gritos', 'tráfico', 'nervios', 'caos'];
@@ -19,7 +20,7 @@ export default function Bubbles({ addScore, say }: GameProps) {
       setBubbles((bs) => [...bs.slice(-24), {
         id: nextId.current++, x: Math.random() * 86, size: gold ? 74 : 62 + Math.random() * 30, t: 5 + Math.random() * 3.5,
         sway: (Math.random() - 0.5) * 60, gold, popped: false,
-        text: gold ? '✨' : pick(WORRIES), color: gold ? '#eab308' : pick(COLORS),
+        text: gold ? '✨' : t(pick(WORRIES)), color: gold ? '#eab308' : pick(COLORS),
       }]);
     }, 620);
     return () => clearInterval(spawn);
@@ -29,7 +30,7 @@ export default function Bubbles({ addScore, say }: GameProps) {
     if (b.popped) return;
     setBubbles((bs) => bs.map((x) => (x.id === b.id ? { ...x, popped: true } : x)));
     addScore(b.gold ? 5 : 1);
-    if (b.gold) say(pick(CALM));
+    if (b.gold) say(t(pick(CALM)));
     setTimeout(() => setBubbles((bs) => bs.filter((x) => x.id !== b.id)), 230);
   }, [addScore, say]);
 

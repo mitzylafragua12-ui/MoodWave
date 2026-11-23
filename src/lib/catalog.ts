@@ -1,8 +1,12 @@
 // Catálogos espejo de supabase/schema.sql. Si cambias uno, cambia el otro.
 import type { ActivityKey, Badge, EmotionKey, Playlist, RoleKey } from './types';
+import { translated } from '../i18n/translated';
+import { t } from '../i18n';
+import { BADGES_EN } from '../i18n/en';
+import { getLang } from '../i18n';
 
 export interface EmotionInfo { id: number; key: EmotionKey; label: string; color: string; emoji: string }
-export const EMOTIONS: EmotionInfo[] = [
+export const EMOTIONS: EmotionInfo[] = ([
   { id: 1, key: 'happy', label: 'Feliz', color: '#facc15', emoji: '😊' },
   { id: 2, key: 'sad', label: 'Triste', color: '#60a5fa', emoji: '😢' },
   { id: 3, key: 'angry', label: 'Enojo', color: '#f43f5e', emoji: '😠' },
@@ -10,19 +14,19 @@ export const EMOTIONS: EmotionInfo[] = [
   { id: 5, key: 'disgusted', label: 'Disgusto', color: '#4ade80', emoji: '🤢' },
   { id: 6, key: 'surprised', label: 'Sorpresa', color: '#fb923c', emoji: '😮' },
   { id: 7, key: 'neutral', label: 'Neutral', color: '#94a3b8', emoji: '😐' },
-];
+] as EmotionInfo[]).map((e) => translated(e, ['label']));
 export const EMOTION_BY_KEY = Object.fromEntries(EMOTIONS.map((e) => [e.key, e])) as Record<EmotionKey, EmotionInfo>;
 
 export interface ActivityInfo {
   id: number; key: ActivityKey; name: string; description: string;
   base_xp: number; min_duration_sec: number; color: string; icon: string;
 }
-export const ACTIVITIES: ActivityInfo[] = [
+export const ACTIVITIES: ActivityInfo[] = ([
   { id: 1, key: 'minigame', name: 'Minijuego', description: 'Un juego distinto para cada emoción.', base_xp: 30, min_duration_sec: 20, color: '#22d3ee', icon: '🎮' },
   { id: 2, key: 'journaling', name: 'Diario emocional', description: 'Escribe cómo te sientes con una guía según tu emoción.', base_xp: 40, min_duration_sec: 0, color: '#a78bfa', icon: '✍️' },
   { id: 3, key: 'meditation', name: 'Meditación guiada', description: 'Respiración guiada con temporizador circular.', base_xp: 50, min_duration_sec: 60, color: '#38bdf8', icon: '🧘' },
   { id: 4, key: 'music', name: 'Música', description: 'Playlist de Spotify curada para tu estado de ánimo.', base_xp: 25, min_duration_sec: 60, color: '#f43f5e', icon: '🎧' },
-];
+] as ActivityInfo[]).map((a) => translated(a, ['name', 'description']));
 export const ACTIVITY_BY_KEY = Object.fromEntries(ACTIVITIES.map((a) => [a.key, a])) as Record<ActivityKey, ActivityInfo>;
 export const ACTIVITY_BY_ID = Object.fromEntries(ACTIVITIES.map((a) => [a.id, a])) as Record<number, ActivityInfo>;
 
@@ -84,7 +88,7 @@ export const JOURNAL_PROMPTS: Record<EmotionKey | 'free', string[]> = {
 };
 
 export interface RoleInfo { id: number; key: RoleKey; name: string; rank: number; description: string }
-export const ROLES: RoleInfo[] = [
+export const ROLES: RoleInfo[] = ([
   { id: 1, key: 'guest', name: 'Visitante', rank: 0, description: 'Prueba la app sin cuenta; no aparece en el ranking.' },
   { id: 2, key: 'listener', name: 'Usuario', rank: 10, description: 'Detecta su emoción, hace actividades y gana XP.' },
   { id: 3, key: 'curator', name: 'Editor de contenido', rank: 20, description: 'Elige la música (playlists de Spotify) que se recomienda para cada emoción.' },
@@ -92,7 +96,7 @@ export const ROLES: RoleInfo[] = [
   { id: 6, key: 'analyst', name: 'Analista', rank: 50, description: 'Revisa los reportes de los usuarios, puede suspender cuentas y consulta la analítica.' },
   { id: 7, key: 'admin', name: 'Administrador', rank: 60, description: 'Gestiona usuarios, roles, orientadores y badges; ve analítica y reportes.' },
   { id: 8, key: 'superadmin', name: 'Superadmin', rank: 70, description: 'Todas las herramientas, incluida la gestión de administradores.' },
-];
+] as RoleInfo[]).map((r) => translated(r, ['name', 'description']));
 export const ROLE_BY_KEY = Object.fromEntries(ROLES.map((r) => [r.key, r])) as Record<RoleKey, RoleInfo>;
 
 /** Permisos explícitos por rol (espejo de role_permissions en schema.sql). Todos los roles usan además la parte de bienestar. */
@@ -139,3 +143,13 @@ export const DEFAULT_PLAYLISTS: Playlist[] = [
   { emotion: 'surprised', spotify_playlist_id: '37i9dQZF1DX3rxVfibe1L0', title: 'Mood Booster' },
   { emotion: 'neutral', spotify_playlist_id: '37i9dQZF1DWZeKCadgRdKQ', title: 'Deep Focus' },
 ];
+
+/** Nombre y descripción de un logro en el idioma actual (los de la base están en español). */
+export const badgeName = (b: Badge) => (getLang() === 'en' && BADGES_EN[b.key]?.name) || b.name;
+export const badgeDescription = (b: Badge) => (getLang() === 'en' && BADGES_EN[b.key]?.description) || b.description;
+/** «Panel de orientador» / «Counselor panel» (en español va en minúscula). */
+export const rolePanelLabel = (role: RoleKey) =>
+  t('Panel de {role}', { role: getLang() === 'en' ? ROLE_BY_KEY[role].name : ROLE_BY_KEY[role].name.toLowerCase() });
+
+/** Motivo de una recomendación (viene de la base en español). */
+export const reasonText = (es: string) => t(es);

@@ -34,9 +34,9 @@ export function loadFaceApi(): Promise<FaceApi> {
       c.width = 640; c.height = 480;
       c.getContext('2d')!.fillRect(0, 0, c.width, c.height);
       await lib.detectSingleFace(c, detectOptions(lib)); // compila el detector
-      const t = lib.tf.zeros([1, 112, 112, 3]);
-      await lib.nets.faceExpressionNet.predictExpressions(t as never); // compila la red de expresiones
-      t.dispose();
+      const blank = lib.tf.zeros([1, 112, 112, 3]);
+      await lib.nets.faceExpressionNet.predictExpressions(blank as never); // compila la red de expresiones
+      blank.dispose();
     } catch { /* el calentamiento es opcional */ }
     faceapi = lib;
     return lib;

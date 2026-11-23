@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { EMOTION_BY_KEY } from '../../../lib/catalog';
 import type { CompletionInput } from '../../../lib/types';
 import type { GameDef } from './types';
+import { t } from '../../../i18n';
 
 type State = 'ready' | 'countdown' | 'playing' | 'over';
 const MIN_SEC = 20;
@@ -68,16 +69,16 @@ export function GameShell({ game, autoStart, busy, onComplete, onPickOther }: {
             <div className="stack center" style={{ alignItems: 'center', maxWidth: 420 }}>
               <div style={{ fontSize: '2.6rem' }} aria-hidden>{game.icon}</div>
               <h2 className="mb0">{game.name}</h2>
-              <span className="chip">{emotion.emoji} Para {emotion.label.toLowerCase()}</span>
+              <span className="chip">{emotion.emoji} {t('Para')} {emotion.label.toLowerCase()}</span>
               {state === 'over' ? (
                 <>
                   <div className="xp-burst">{score}</div>
-                  <p className="muted mb0">puntos {best > score && <>· tu mejor ronda: {best}</>}</p>
+                  <p className="muted mb0">{t('puntos')} {best > score && <>{t('· tu mejor ronda:')} {best}</>}</p>
                   <div className="row" style={{ justifyContent: 'center' }}>
-                    <button className="btn btn-ghost" onClick={() => setState('countdown')}>Otra ronda</button>
+                    <button className="btn btn-ghost" onClick={() => setState('countdown')}>{t('Otra ronda')}</button>
                     <button className="btn btn-primary" disabled={busy || total.current < MIN_SEC}
                       onClick={() => onComplete({ durationSeconds: total.current, score: Math.max(best, score), game: game.key })}>
-                      Completar actividad
+                      {t('Completar actividad')}
                     </button>
                   </div>
                 </>
@@ -86,15 +87,15 @@ export function GameShell({ game, autoStart, busy, onComplete, onPickOther }: {
                   <p className="muted mb0">{game.howTo}</p>
                   <p className="small faint mb0">{game.why}</p>
                   {state === 'countdown'
-                    ? <div className="countdown" aria-live="assertive">{count || '¡Ya!'}</div>
-                    : <button className="btn btn-cyan" onClick={() => setState('countdown')}>Jugar</button>}
+                    ? <div className="countdown" aria-live="assertive">{count || t('¡Ya!')}</div>
+                    : <button className="btn btn-cyan" onClick={() => setState('countdown')}>{t('Jugar')}</button>}
                 </>
               )}
             </div>
           </div>
         )}
       </div>
-      {state !== 'playing' && <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={onPickOther}>🎮 Elegir otro juego</button>}
+      {state !== 'playing' && <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={onPickOther}>{t('🎮 Elegir otro juego')}</button>}
     </div>
   );
 }

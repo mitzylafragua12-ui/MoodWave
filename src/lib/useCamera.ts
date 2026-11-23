@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { t } from '../i18n';
 
 export type CameraState = 'off' | 'starting' | 'on' | 'error';
 
 export function cameraError(e: unknown): string {
   const name = (e as { name?: string })?.name;
-  if (name === 'NotAllowedError' || name === 'SecurityError') return 'Permiso de cámara denegado. Habilítalo en tu navegador y vuelve a intentar.';
-  if (name === 'NotFoundError') return 'No se encontró ninguna cámara.';
-  if (!navigator.mediaDevices?.getUserMedia) return 'Tu navegador no permite usar la cámara aquí (se requiere HTTPS).';
-  return 'No se pudo abrir la cámara: ' + ((e as Error)?.message ?? String(e));
+  if (name === 'NotAllowedError' || name === 'SecurityError') return t('Permiso de cámara denegado. Habilítalo en tu navegador y vuelve a intentar.');
+  if (name === 'NotFoundError') return t('No se encontró ninguna cámara.');
+  if (!navigator.mediaDevices?.getUserMedia) return t('Tu navegador no permite usar la cámara aquí (se requiere HTTPS).');
+  return t('No se pudo abrir la cámara: {error}', { error: (e as Error)?.message ?? String(e) });
 }
 
 /** Cámara frontal ligada a un <video>; se apaga sola al desmontar. */

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ActivityProps } from '../ActivityRunner';
 import { fmtDuration } from '../../lib/date';
+import { t } from '../../i18n';
 
 // Patrón 4-4-6: inhalar 4 s, sostener 4 s, exhalar 6 s.
 const PHASES = [
@@ -50,13 +51,13 @@ export default function Meditation({ onComplete, busy, autoStart }: ActivityProp
     <div className="card" style={{ maxWidth: 560, margin: '0 auto' }}>
       {!started ? (
         <div className="center stack" style={{ alignItems: 'center' }}>
-          <p className="muted">Siéntate cómodo, relaja los hombros y sigue el círculo: <strong>inhala 4 s · sostén 4 s · exhala 6 s</strong>.</p>
-          <div className="row" role="radiogroup" aria-label="Duración">
+          <p className="muted">{t('Siéntate cómodo, relaja los hombros y sigue el círculo:')} <strong>{t('inhala 4 s · sostén 4 s · exhala 6 s')}</strong>.</p>
+          <div className="row" role="radiogroup" aria-label={t('Duración')}>
             {OPTIONS.map((m) => (
-              <button key={m} role="radio" aria-checked={minutes === m} className={`btn btn-sm ${minutes === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMinutes(m)}>{m} min</button>
+              <button key={m} role="radio" aria-checked={minutes === m} className={`btn btn-sm ${minutes === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMinutes(m)}>{m} {t('min')}</button>
             ))}
           </div>
-          <button className="btn btn-cyan" onClick={() => { setStarted(true); setRunning(true); }}>Comenzar</button>
+          <button className="btn btn-cyan" onClick={() => { setStarted(true); setRunning(true); }}>{t('Comenzar')}</button>
         </div>
       ) : (
         <>
@@ -70,26 +71,26 @@ export default function Meditation({ onComplete, busy, autoStart }: ActivityProp
               <div className="breath-core" style={{ transform: `scale(${running ? phase.scale : 1})`, '--dur': `${phase.sec}s` } as CSSProperties}>
                 <div className="center">
                   <div className="breath-time" aria-live="off">{fmtDuration(Math.max(0, total - elapsed))}</div>
-                  <div className="small muted">restante</div>
+                  <div className="small muted">{t('restante')}</div>
                 </div>
               </div>
             </div>
-            <div className="phase mt" aria-live="polite">{done ? 'Terminado' : running ? `${phase.name} · ${phaseLeft}` : 'En pausa'}</div>
-            <div className="small faint">Inhala · Sostén · Exhala</div>
+            <div className="phase mt" aria-live="polite">{done ? t('Terminado') : running ? `${t(phase.name)} · ${phaseLeft}` : t('En pausa')}</div>
+            <div className="small faint">{t('Inhala · Sostén · Exhala')}</div>
             {!done && (
-              <div className="row mt" role="radiogroup" aria-label="Duración" style={{ justifyContent: 'center' }}>
-                <span className="small faint">Duración:</span>
+              <div className="row mt" role="radiogroup" aria-label={t('Duración')} style={{ justifyContent: 'center' }}>
+                <span className="small faint">{t('Duración:')}</span>
                 {OPTIONS.filter((m) => m * 60 > elapsed).map((m) => (
-                  <button key={m} role="radio" aria-checked={minutes === m} className={`btn btn-sm ${minutes === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMinutes(m)}>{m} min</button>
+                  <button key={m} role="radio" aria-checked={minutes === m} className={`btn btn-sm ${minutes === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMinutes(m)}>{m} {t('min')}</button>
                 ))}
               </div>
             )}
           </div>
           <div className="row" style={{ justifyContent: 'center' }}>
-            {!done && <button className="btn btn-ghost" onClick={() => setRunning((r) => !r)}>{running ? 'Pausar' : 'Reanudar'}</button>}
+            {!done && <button className="btn btn-ghost" onClick={() => setRunning((r) => !r)}>{running ? t('Pausar') : t('Reanudar')}</button>}
             <button className="btn btn-primary" disabled={busy || elapsed < MIN_SEC}
               onClick={() => { setRunning(false); onComplete({ durationSeconds: elapsed }); }}>
-              {done ? 'Completar' : elapsed < MIN_SEC ? `Completar (en ${Math.ceil(MIN_SEC - elapsed)} s)` : 'Terminar y completar'}
+              {done ? t('Completar') : elapsed < MIN_SEC ? t('Completar (en {s} s)', { s: Math.ceil(MIN_SEC - elapsed) }) : t('Terminar y completar')}
             </button>
           </div>
         </>

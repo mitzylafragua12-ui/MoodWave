@@ -1,6 +1,7 @@
 import { EMOTIONS } from '../lib/catalog';
 import { lastDays, localDay, weekdayShort } from '../lib/date';
 import type { DetectionRow, EmotionKey } from '../lib/types';
+import { t } from '../i18n';
 
 /** Barras apiladas: emociones registradas por día en los últimos 7 días (HU-06). */
 export function WeeklyMoodChart({ detections }: { detections: DetectionRow[] }) {
@@ -17,7 +18,7 @@ export function WeeklyMoodChart({ detections }: { detections: DetectionRow[] }) 
 
   return (
     <div>
-      <div className="week-chart" role="img" aria-label="Emociones registradas en los últimos 7 días">
+      <div className="week-chart" role="img" aria-label={t('Emociones registradas en los últimos 7 días')}>
         {days.map((d, i) => (
           <div key={d} className={`week-col${d === today ? ' today' : ''}`} title={`${totals[i]} registro(s)`}>
             <span className="small faint">{totals[i] || ''}</span>
@@ -34,7 +35,7 @@ export function WeeklyMoodChart({ detections }: { detections: DetectionRow[] }) 
         <div className="legend">
           {used.map((e) => <span key={e.key}><span className="chip-dot" style={{ background: e.color }} />{e.label}</span>)}
         </div>
-      ) : <p className="muted small mt">Aún no hay registros esta semana. ¡Haz tu primera detección!</p>}
+      ) : <p className="muted small mt">{t('Aún no hay registros esta semana. ¡Haz tu primera detección!')}</p>}
     </div>
   );
 }

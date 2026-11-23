@@ -5,6 +5,7 @@ import { loadFaceAuthModels, sampleDescriptors } from '../lib/faceDetection';
 import { LOGIN_SAMPLES, meanDescriptor } from '../lib/faceAuth';
 import { errMsg } from '../context/ToastContext';
 import { ErrorBox } from './ui';
+import { t } from '../i18n';
 
 export const FACE_DEVICE_KEY = 'mw-face-device';
 export function markFaceDevice(on: boolean) {
@@ -15,13 +16,13 @@ export function isFaceDevice() {
 }
 
 type Step = 'idle' | 'starting' | 'identifying' | 'entering';
-const IDLE_HINT = 'Mira de frente a la cámara y pulsa «Identificarme».';
+const IDLE_HINT = 'Mira de frente a la cámara y pulsa «Identificarme».'; // se traduce al mostrarse
 
 /** Entrar con el rostro: captura estática + identificación 1:N (sin prueba de parpadeo). */
 export function FaceLoginPanel({ onSuccess }: { onSuccess: () => void }) {
   const cam = useCamera();
   const [step, setStep] = useState<Step>('idle');
-  const [hint, setHint] = useState(IDLE_HINT);
+  const [hint, setHint] = useState(t(IDLE_HINT));
   const [error, setError] = useState<string | null>(null);
 
   // Precarga los modelos mientras la persona lee la pantalla.
@@ -30,16 +31,16 @@ export function FaceLoginPanel({ onSuccess }: { onSuccess: () => void }) {
   async function identify() {
     setError(null);
     setStep('starting');
-    setHint('Abriendo cámara y cargando modelos (la primera vez tarda unos segundos)…');
-    if (!(await cam.start())) { setStep('idle'); setHint(IDLE_HINT); return; }
+    setHint(t('Abriendo cámara y cargando modelos (la primera vez tarda unos segundos)…'));
+    if (!(await cam.start())) { setStep('idle'); setHint(t(IDLE_HINT)); return; }
     try {
       await loadFaceAuthModels();
       setStep('identifying');
       const descs = await sampleDescriptors(cam.videoRef.current!, LOGIN_SAMPLES,
-        (i, n, ok) => setHint(`Identificando ${i}/${n}${ok ? '' : ' — no veo tu cara'}`));
-      if (descs.length < 3) throw new Error('No pude ver bien tu cara. Acércate, ponte de frente y busca luz.');
+        (i, n, ok) => setHint(t(ok ? 'Identificando {i}/{n}' : 'Identificando {i}/{n} — no veo tu cara', { i, n })));
+      if (descs.length < 3) throw new Error(t('No pude ver bien tu cara. Acércate, ponte de frente y busca luz.'));
       setStep('entering');
-      setHint('¡Te reconocí! Entrando…');
+      setHint(t('¡Te reconocí! Entrando…'));
       await api.faceLogin(meanDescriptor(descs));
       markFaceDevice(true);
       cam.stop();
@@ -47,7 +48,7 @@ export function FaceLoginPanel({ onSuccess }: { onSuccess: () => void }) {
     } catch (e) {
       setError(errMsg(e));
       setStep('idle');
-      setHint(IDLE_HINT);
+      setHint(t(IDLE_HINT));
     }
   }
 
@@ -55,19 +56,19 @@ export function FaceLoginPanel({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div>
       <div className="camera-frame face-cam" style={{ '--frame': step === 'entering' ? 'var(--green)' : 'var(--cyan)' } as CSSProperties}>
-        <video ref={cam.videoRef} playsInline muted aria-label="Cámara para identificarte" />
+        <video ref={cam.videoRef} playsInline muted aria-label={t('Cámara para identificarte')} />
         {cam.state !== 'on' && (
           <div className="camera-overlay"><div className="stack" style={{ alignItems: 'center', gap: 8 }}>
             <div style={{ fontSize: '2.6rem' }} aria-hidden>🙂</div>
-            <p className="small muted mb0">Tu rostro se analiza en este dispositivo. Solo se envía una plantilla numérica para reconocerte.</p>
+            <p className="small muted mb0">{t('Tu rostro se analiza en este dispositivo. Solo se envía una plantilla numérica para reconocerte.')}</p>
           </div></div>
         )}
-        {step === 'identifying' && <div className="camera-status chip"><span className="live-dot" />Identificando…</div>}
+        {step === 'identifying' && <div className="camera-status chip"><span className="live-dot" />{t('Identificando…')}</div>}
       </div>
       <p className="small muted center" aria-live="polite" style={{ margin: '10px 0' }}>{hint}</p>
       <ErrorBox error={error || cam.error} />
       <button type="button" className="btn btn-cyan btn-block mt" onClick={identify} disabled={busy}>
-        {step === 'idle' ? '🙂 Identificarme' : step === 'entering' ? 'Entrando…' : 'Un momento…'}
+        {step === 'idle' ? t('🙂 Identificarme') : step === 'entering' ? t('Entrando…') : t('Un momento…')}
       </button>
     </div>
   );

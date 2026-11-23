@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { pick, type GameProps } from './types';
+import { t } from '../../../i18n';
 
 // DISGUSTO: limpiar una ventana sucia cambia el foco y deja una imagen agradable.
 const SCENES = [
@@ -27,7 +28,7 @@ export default function Wipe({ addScore, say }: GameProps) {
       setCleared(ratio);
       if (ratio >= 0.8) {
         addScore(1);
-        say(pick(DONE));
+        say(t(pick(DONE)));
         setScene((s) => (s + 1) % SCENES.length);
       }
     }, 350);
@@ -47,11 +48,11 @@ export default function Wipe({ addScore, say }: GameProps) {
   return (
     <div className="game-layer" style={{ background: SCENES[scene].bg }}>
       <span className="sprite" style={{ left: '50%', top: '55%', fontSize: '7rem' }} aria-hidden>{SCENES[scene].art}</span>
-      <canvas ref={canvas} width={640} height={460} className="wipe-canvas" aria-label="Ventana sucia: arrastra para limpiarla"
+      <canvas ref={canvas} width={640} height={460} className="wipe-canvas" aria-label={t('Ventana sucia: arrastra para limpiarla')}
         onPointerDown={(e) => { drawing.current = true; e.currentTarget.setPointerCapture(e.pointerId); wipe(e.clientX, e.clientY); }}
         onPointerMove={(e) => { if (drawing.current) wipe(e.clientX, e.clientY); }}
         onPointerUp={() => { drawing.current = false; }} />
-      <span className="chip" style={{ position: 'absolute', left: '50%', bottom: 12, transform: 'translateX(-50%)', pointerEvents: 'none' }}>🧽 {Math.round(cleared * 100)}% limpio</span>
+      <span className="chip" style={{ position: 'absolute', left: '50%', bottom: 12, transform: 'translateX(-50%)', pointerEvents: 'none' }}>🧽 {Math.round(cleared * 100)}{t('% limpio')}</span>
     </div>
   );
 }

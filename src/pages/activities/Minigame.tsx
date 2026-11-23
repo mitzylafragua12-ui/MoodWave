@@ -3,6 +3,7 @@ import type { ActivityProps } from '../ActivityRunner';
 import { EMOTION_BY_KEY } from '../../lib/catalog';
 import { GAMES, GAME_FOR_EMOTION } from './games';
 import { GameShell } from './games/GameShell';
+import { t } from '../../i18n';
 
 /** Minijuego: según la emoción detectada se juega su juego; sin emoción, se elige uno. */
 export default function Minigame({ emotion, onComplete, busy, autoStart }: ActivityProps) {
@@ -13,7 +14,7 @@ export default function Minigame({ emotion, onComplete, busy, autoStart }: Activ
   if (!game) {
     return (
       <div className="stack" style={{ maxWidth: 760 }}>
-        <p className="muted mb0">Elige un juego. Cada uno está pensado para una emoción.</p>
+        <p className="muted mb0">{t('Elige un juego. Cada uno está pensado para una emoción.')}</p>
         <div className="grid grid-2">
           {GAMES.map((g) => {
             const e = EMOTION_BY_KEY[g.emotion];

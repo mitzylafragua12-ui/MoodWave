@@ -1,3 +1,4 @@
+// i18n-ignore-file: pantalla técnica para quien despliega el sitio (solo en español).
 import { AuthHero } from './Login';
 
 /** Se muestra si el sitio se compiló sin las credenciales de Supabase. */

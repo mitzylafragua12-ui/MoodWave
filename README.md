@@ -57,6 +57,12 @@ Abre http://localhost:5173. Si faltan las variables, la app muestra una pantalla
 
 ---
 
+## Idioma y tema
+
+- **Perfil → Configuración**: idioma (**Español / English**) y tema (**Oscuro / Claro / Según el sistema**). Se guardan en la cuenta (`users.language`, `users.theme`) y se aplican en todos los dispositivos; en las pantallas de entrada hay un selector rápido que se recuerda en el navegador.
+- Traducciones en [`src/i18n/en.ts`](src/i18n/en.ts): la clave es el texto en español tal como aparece en el código (`t('Hola, {name}', { name })`). Si falta una traducción se muestra el español. La prueba `src/i18n/i18n.test.ts` falla si se agrega un texto con `t('…')` sin su traducción.
+- Los colores son variables CSS (`:root` y `:root[data-theme="light"]` en `src/styles/global.css`); el tema se aplica antes de pintar la página para evitar destellos.
+
 ## Entrar con el rostro
 
 Retomado del prototipo anterior del equipo (es lo que se conservó de él) y adaptado a Supabase:

@@ -7,6 +7,8 @@ import { EMOTIONS, EMOTION_BY_KEY } from '../lib/catalog';
 import { dominant, detectExpressions, ExpressionSmoother, loadFaceApi, type Scores, EMOTION_KEYS } from '../lib/faceDetection';
 import type { EmotionKey } from '../lib/types';
 import { ErrorBox, PageHead, ProgressBar } from '../components/ui';
+import { t } from '../i18n';
+import { badgeName } from '../lib/catalog';
 
 type Phase = 'idle' | 'loading' | 'running' | 'denied' | 'error';
 const AUTO_SECONDS = 1;
@@ -52,11 +54,11 @@ export default function Detect() {
     setScores(null);
     setElapsed(null);
     try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Tu navegador no permite acceder a la cámara (se requiere HTTPS).');
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error(t('Tu navegador no permite acceder a la cámara (se requiere HTTPS).'));
       // El modelo se carga en paralelo (normalmente ya viene precargado desde el inicio):
       // la cámara se muestra de inmediato y la primera lectura llega en cuanto el modelo esté listo.
       const model = loadFaceApi();
-      model.catch((e) => { setError('No se pudo cargar el modelo de IA: ' + errMsg(e)); setShowManual(true); });
+      model.catch((e) => { setError(t('No se pudo cargar el modelo de IA: {error}', { error: errMsg(e) })); setShowManual(true); });
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
       if (!mounted.current) { stream.getTracks().forEach((t) => t.stop()); return; } // ya salió de la página
       streamRef.current = stream;
@@ -92,9 +94,9 @@ export default function Detect() {
           smoother.current.push(s);
           setScores(smoother.current.average());
           if (smoother.current.stable && elapsedRef.current === null) {
-            const t = (performance.now() - startedAt.current) / 1000;
-            elapsedRef.current = t;
-            setElapsed(t);
+            const secs = (performance.now() - startedAt.current) / 1000;
+            elapsedRef.current = secs;
+            setElapsed(secs);
           }
         }
       } catch { /* fotograma omitido */ }
@@ -133,8 +135,8 @@ export default function Detect() {
     try {
       const r = await api.recordDetection(emotion, confidence, s, source);
       stop();
-      if (r.xp_granted > 0) toast(`+${r.xp_granted} XP por tu check-in del día`);
-      r.new_badges.forEach((b) => toast(`${b.icon} Logro desbloqueado: ${b.name}`));
+      if (r.xp_granted > 0) toast(t('+{xp} XP por tu check-in del día', { xp: r.xp_granted }));
+      r.new_badges.forEach((b) => toast(`${b.icon} ${t('Logro desbloqueado: {name}', { name: badgeName(b) })}`));
       // Directo a la actividad recomendada; arranca sola (?auto=1). Desde ahí se puede cambiar.
       nav(`/actividad/${r.assignment_id}?auto=1`);
     } catch (e) {
@@ -148,37 +150,37 @@ export default function Detect() {
 
   return (
     <div className="page">
-      <PageHead eyebrow="Detección emocional" title="¿Cómo te sientes?" color="var(--red)"
-        subtitle="Mira a la cámara con naturalidad. El análisis se hace 100% en tu dispositivo: no se guardan ni envían imágenes." />
+      <PageHead eyebrow={t('Detección emocional')} title={t('¿Cómo te sientes?')} color="var(--red)"
+        subtitle={t('Mira a la cámara con naturalidad. El análisis se hace 100% en tu dispositivo: no se guardan ni envían imágenes.')} />
 
       <div className="grid grid-2" style={{ alignItems: 'start' }}>
         <div className="stack">
           <div className="camera-frame" style={{ '--frame': frameColor } as CSSProperties}>
-            <video ref={videoRef} playsInline muted aria-label="Vista previa de la cámara" />
+            <video ref={videoRef} playsInline muted aria-label={t('Vista previa de la cámara')} />
             {phase !== 'running' && (
               <div className="camera-overlay">
                 <div className="stack" style={{ alignItems: 'center', gap: 12 }}>
                   <div style={{ fontSize: '3.2rem' }} aria-hidden>🙂</div>
-                  {phase === 'loading' ? <p className="muted">Cargando modelo de IA y cámara…</p>
-                    : phase === 'denied' ? <p className="muted">No diste permiso para usar la cámara. Puedes habilitarlo en tu navegador o elegir tu emoción manualmente.</p>
-                    : <p className="muted">Activa la cámara para detectar tu estado de ánimo.</p>}
-                  {phase !== 'loading' && <button className="btn btn-primary" onClick={start} disabled={profile.suspended}>Activar cámara</button>}
+                  {phase === 'loading' ? <p className="muted">{t('Cargando modelo de IA y cámara…')}</p>
+                    : phase === 'denied' ? <p className="muted">{t('No diste permiso para usar la cámara. Puedes habilitarlo en tu navegador o elegir tu emoción manualmente.')}</p>
+                    : <p className="muted">{t('Activa la cámara para detectar tu estado de ánimo.')}</p>}
+                  {phase !== 'loading' && <button className="btn btn-primary" onClick={start} disabled={profile.suspended}>{t('Activar cámara')}</button>}
                 </div>
               </div>
             )}
             {phase === 'running' && (
               <div className="camera-status chip">
-                <span className="live-dot" />{faceFound ? (stable ? 'Rostro detectado' : 'Analizando…') : 'Buscando rostro…'}
+                <span className="live-dot" />{faceFound ? (stable ? t('Rostro detectado') : t('Analizando…')) : t('Buscando rostro…')}
               </div>
             )}
           </div>
           <ErrorBox error={error} />
-          {phase === 'running' && <button className="btn btn-ghost btn-sm" onClick={() => { stop(); setPhase('idle'); setScores(null); }}>Detener cámara</button>}
+          {phase === 'running' && <button className="btn btn-ghost btn-sm" onClick={() => { stop(); setPhase('idle'); setScores(null); }}>{t('Detener cámara')}</button>}
         </div>
 
         <div className="stack">
           <div className="card">
-            <div className="eyebrow">Emoción detectada</div>
+            <div className="eyebrow">{t('Emoción detectada')}</div>
             {result ? (
               <>
                 <div className="spread">
@@ -194,27 +196,27 @@ export default function Detect() {
                     </div>
                   ))}
                 </div>
-                {elapsed !== null && <p className="small faint">Lectura estable en {elapsed.toFixed(1)} s</p>}
+                {elapsed !== null && <p className="small faint">{t('Lectura estable en {s} s', { s: elapsed.toFixed(1) })}</p>}
                 {countdown !== null && !saving ? (
                   <div className="notice mt spread" aria-live="polite">
-                    <span>Te llevo a tu actividad en <strong>{countdown}</strong>…</span>
-                    <button className="btn btn-ghost btn-sm" onClick={() => setAutoGo(false)}>Cancelar</button>
+                    <span>{t('Te llevo a tu actividad en')} <strong>{countdown}</strong>…</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setAutoGo(false)}>{t('Cancelar')}</button>
                   </div>
                 ) : (
                   <button className="btn btn-primary btn-block mt" disabled={!stable || saving || profile.suspended}
                     onClick={() => confirm(result.emotion, result.confidence, scores!, 'camera')}>
-                    {saving ? 'Abriendo tu actividad…' : 'Ir a mi actividad'}
+                    {saving ? t('Abriendo tu actividad…') : t('Ir a mi actividad')}
                   </button>
                 )}
               </>
             ) : (
-              <p className="muted">{phase === 'running' ? 'Detectando tu estado de ánimo…' : 'Aquí verás tu emoción y el nivel de confianza.'}</p>
+              <p className="muted">{phase === 'running' ? t('Detectando tu estado de ánimo…') : t('Aquí verás tu emoción y el nivel de confianza.')}</p>
             )}
           </div>
 
           <div className="card">
             <button className="spread icon-btn" style={{ width: '100%', fontSize: '1rem', padding: 0 }} onClick={() => setShowManual((s) => !s)} aria-expanded={showManual}>
-              <span>¿Sin cámara? Elige tu emoción</span><span className="faint">{showManual ? '▲' : '▼'}</span>
+              <span>{t('¿Sin cámara? Elige tu emoción')}</span><span className="faint">{showManual ? '▲' : '▼'}</span>
             </button>
             {showManual && (
               <div className="manual-grid mt">

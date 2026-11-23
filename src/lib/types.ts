@@ -17,6 +17,8 @@ export interface Profile {
   last_active_date: string | null;
   suspended: boolean;
   created_at: string;
+  language: 'es' | 'en';
+  theme: 'dark' | 'light' | 'system';
 }
 
 export interface Badge {

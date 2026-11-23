@@ -154,8 +154,14 @@ create table if not exists public.users (
   longest_streak   int not null default 0,
   last_active_date date,
   suspended        boolean not null default false,
+  -- Preferencias de la persona (Perfil → Configuración)
+  language         text not null default 'es' check (language in ('es','en')),
+  theme            text not null default 'dark' check (theme in ('dark','light','system')),
   created_at       timestamptz not null default now()
 );
+-- Instalaciones anteriores: añade las preferencias si no existían.
+alter table public.users add column if not exists language text not null default 'es' check (language in ('es','en'));
+alter table public.users add column if not exists theme text not null default 'dark' check (theme in ('dark','light','system'));
 
 create table if not exists public.detections (
   id          uuid primary key default gen_random_uuid(),
@@ -953,9 +959,12 @@ begin
   while exists (select 1 from public.users where username = v_username) loop
     v_n := v_n + 1; v_username := v_base || v_n;
   end loop;
-  insert into public.users (id, username, display_name, role_id)
+  -- El idioma y el tema elegidos en el navegador al registrarse se vuelven las preferencias iniciales.
+  insert into public.users (id, username, display_name, role_id, language, theme)
   values (new.id, v_username, coalesce(new.raw_user_meta_data->>'display_name', v_username),
-          case when coalesce(new.is_anonymous, false) then 1 else 2 end);
+          case when coalesce(new.is_anonymous, false) then 1 else 2 end,
+          case when new.raw_user_meta_data->>'language' in ('es','en') then new.raw_user_meta_data->>'language' else 'es' end,
+          case when new.raw_user_meta_data->>'theme' in ('dark','light','system') then new.raw_user_meta_data->>'theme' else 'dark' end);
   return new;
 end $$;
 
@@ -1012,7 +1021,7 @@ create policy "update own profile" on public.users for update
   using (id = auth.uid()) with check (id = auth.uid());
 -- Solo columnas no sensibles son editables por el propio usuario (xp, rol, etc. vía RPC).
 revoke update on public.users from authenticated, anon;
-grant update (username, display_name) on public.users to authenticated;
+grant update (username, display_name, language, theme) on public.users to authenticated;
 
 -- detections / assignments / completions: solo los propios (escritura vía RPC).
 drop policy if exists "own rows" on public.detections;

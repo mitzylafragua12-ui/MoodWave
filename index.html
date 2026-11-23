@@ -10,6 +10,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@500;700;800&display=swap" rel="stylesheet" />
+    <script>
+      // Aplica el tema guardado antes de pintar (evita un destello del tema equivocado).
+      try {
+        var t = localStorage.getItem('mw-theme') || 'dark';
+        if (t === 'system') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        document.documentElement.dataset.theme = t;
+        var l = localStorage.getItem('mw-lang'); if (l) document.documentElement.lang = l;
+      } catch (e) {}
+    </script>
     <title>MoodWave</title>
   </head>
   <body>

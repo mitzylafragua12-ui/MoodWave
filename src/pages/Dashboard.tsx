@@ -8,6 +8,7 @@ import { ACTIVITY_BY_KEY } from '../lib/catalog';
 import { fmtDateTime, localDay } from '../lib/date';
 import { WeeklyMoodChart } from '../components/WeeklyMoodChart';
 import { EmotionChip, ErrorBox, PageHead, ProgressBar, Spinner } from '../components/ui';
+import { t } from '../i18n';
 
 export default function Dashboard() {
   const profile = useProfile();
@@ -24,15 +25,15 @@ export default function Dashboard() {
   const xpToday = data?.ledger.filter((l) => localDay(l.created_at) === today).reduce((s, l) => s + l.amount, 0) ?? 0;
   const pending = data?.history.find((h) => !h.completed_at);
   const hour = new Date().getHours();
-  const greet = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const greet = t(hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches');
 
   return (
     <div className="page">
       <PageHead
         eyebrow={greet}
-        title={`Hola, ${profile.display_name || profile.username}`}
-        subtitle={profile.streak > 0 ? `Sigue así: llevas ${profile.streak} día${profile.streak === 1 ? '' : 's'} cuidándote.` : '¿Cómo te sientes hoy? Hagamos un chequeo rápido.'}
-        actions={<Link to="/detectar" className="btn btn-primary">📷 Detectar mi emoción</Link>}
+        title={t('Hola, {name}', { name: profile.display_name || profile.username })}
+        subtitle={profile.streak > 0 ? t(profile.streak === 1 ? 'Sigue así: llevas {n} día cuidándote.' : 'Sigue así: llevas {n} días cuidándote.', { n: profile.streak }) : t('¿Cómo te sientes hoy? Hagamos un chequeo rápido.')}
+        actions={<Link to="/detectar" className="btn btn-primary">{t('📷 Detectar mi emoción')}</Link>}
       />
       <ErrorBox error={error} />
 
@@ -41,26 +42,26 @@ export default function Dashboard() {
           <div className="card">
             <div className="spread" style={{ marginBottom: 10 }}>
               <div>
-                <div className="eyebrow" style={{ color: 'var(--purple-soft)' }}>Nivel {lp.level}</div>
+                <div className="eyebrow" style={{ color: 'var(--purple-soft)' }}>{t('Nivel')} {lp.level}</div>
                 <h2 className="mb0">{LEVEL_NAMES[lp.level - 1]}</h2>
               </div>
-              <div className="muted small">{lp.next ? `${lp.toNext} XP para nivel ${lp.level + 1}` : 'Nivel máximo'}</div>
+              <div className="muted small">{lp.next ? t('{xp} XP para nivel {level}', { xp: lp.toNext, level: lp.level + 1 }) : t('Nivel máximo')}</div>
             </div>
-            <ProgressBar value={lp.ratio} label="Progreso de nivel" />
+            <ProgressBar value={lp.ratio} label={t('Progreso de nivel')} />
             <div className="spread small mt">
-              <span className="muted">XP de hoy: <strong style={{ color: 'var(--text)' }}>{xpToday}</strong> / {DAILY_XP_CAP}</span>
-              <Link to="/perfil">Ver logros →</Link>
+              <span className="muted">{t('XP de hoy:')} <strong style={{ color: 'var(--text)' }}>{xpToday}</strong> / {DAILY_XP_CAP}</span>
+              <Link to="/perfil">{t('Ver logros →')}</Link>
             </div>
           </div>
 
           <div className="stats-row">
-            <div className="card stat"><div className="value" style={{ color: 'var(--red)' }}>{profile.streak}</div><div className="label">🔥 Días de racha</div></div>
-            <div className="card stat"><div className="value" style={{ color: 'var(--cyan)' }}>{profile.xp.toLocaleString('es-MX')}</div><div className="label">⚡ XP total</div></div>
-            <div className="card stat"><div className="value" style={{ color: 'var(--yellow)' }}>{data?.badges.length ?? '—'}</div><div className="label">🏅 Logros</div></div>
+            <div className="card stat"><div className="value" style={{ color: 'var(--red)' }}>{profile.streak}</div><div className="label">{t('🔥 Días de racha')}</div></div>
+            <div className="card stat"><div className="value" style={{ color: 'var(--cyan)' }}>{profile.xp.toLocaleString('es-MX')}</div><div className="label">{t('⚡ XP total')}</div></div>
+            <div className="card stat"><div className="value" style={{ color: 'var(--yellow)' }}>{data?.badges.length ?? '—'}</div><div className="label">{t('🏅 Logros')}</div></div>
           </div>
 
           <div className="card">
-            <div className="eyebrow">Ánimo esta semana</div>
+            <div className="eyebrow">{t('Ánimo esta semana')}</div>
             {loading && !data ? <Spinner /> : <WeeklyMoodChart detections={data?.detections ?? []} />}
           </div>
         </div>
@@ -68,43 +69,43 @@ export default function Dashboard() {
         <div className="stack">
           {pending && (
             <div className="card card-accent" style={{ '--accent': ACTIVITY_BY_KEY[pending.activity].color } as CSSProperties}>
-              <div className="eyebrow">Pendiente para ti</div>
+              <div className="eyebrow">{t('Pendiente para ti')}</div>
               <h3>{ACTIVITY_BY_KEY[pending.activity].icon} {ACTIVITY_BY_KEY[pending.activity].name}</h3>
-              <p className="small muted">Recomendada {fmtDateTime(pending.assigned_at)}</p>
+              <p className="small muted">{t('Recomendada')} {fmtDateTime(pending.assigned_at)}</p>
               {pending.emotion && <p><EmotionChip emotion={pending.emotion} confidence={pending.confidence} /></p>}
-              <Link to={`/actividad/${pending.assignment_id}?auto=1`} className="btn btn-cyan btn-sm">Empezar · +{ACTIVITY_BY_KEY[pending.activity].base_xp} XP</Link>
+              <Link to={`/actividad/${pending.assignment_id}?auto=1`} className="btn btn-cyan btn-sm">{t('Empezar · +')}{ACTIVITY_BY_KEY[pending.activity].base_xp} XP</Link>
             </div>
           )}
           <div className="card">
-            <div className="eyebrow">Actividad reciente</div>
+            <div className="eyebrow">{t('Actividad reciente')}</div>
             {!data ? <Spinner /> : data.history.length === 0 ? (
-              <p className="muted small">Todavía no tienes actividades. Empieza con una detección.</p>
+              <p className="muted small">{t('Todavía no tienes actividades. Empieza con una detección.')}</p>
             ) : (
               <div className="stack" style={{ gap: 10 }}>
                 {data.history.map((h) => (
                   <div key={h.assignment_id} className="spread small">
                     <span>{ACTIVITY_BY_KEY[h.activity].icon} {ACTIVITY_BY_KEY[h.activity].name}</span>
-                    <span className={h.completed_at ? '' : 'faint'}>{h.completed_at ? '✓ Hecha' : 'Pendiente'}</span>
+                    <span className={h.completed_at ? '' : 'faint'}>{h.completed_at ? t('✓ Hecha') : t('Pendiente')}</span>
                   </div>
                 ))}
-                <Link to="/historial" className="small">Ver historial completo →</Link>
+                <Link to="/historial" className="small">{t('Ver historial completo →')}</Link>
               </div>
             )}
           </div>
           {data && !data.face.enrolled && (
             <div className="card card-accent" style={{ '--accent': 'var(--cyan)' } as CSSProperties}>
-              <div className="eyebrow">Nuevo</div>
-              <h3>🙂 Entra con tu rostro</h3>
-              <p className="small muted">Registra tu rostro y la próxima vez solo tendrás que mirar a la cámara.</p>
-              <Link to="/perfil#rostro" className="btn btn-ghost btn-sm">Registrar mi rostro</Link>
+              <div className="eyebrow">{t('Nuevo')}</div>
+              <h3>{t('🙂 Entra con tu rostro')}</h3>
+              <p className="small muted">{t('Registra tu rostro y la próxima vez solo tendrás que mirar a la cámara.')}</p>
+              <Link to="/perfil#rostro" className="btn btn-ghost btn-sm">{t('Registrar mi rostro')}</Link>
             </div>
           )}
           <div className="card">
-            <div className="eyebrow">Atajos</div>
+            <div className="eyebrow">{t('Atajos')}</div>
             <div className="stack" style={{ gap: 8 }}>
-              <Link to="/actividades" className="btn btn-ghost btn-sm">✨ Elegir actividad libre</Link>
-              <Link to="/ranking" className="btn btn-ghost btn-sm">🏆 Ver ranking</Link>
-              <Link to="/mentoria" className="btn btn-ghost btn-sm">🤝 Hablar con un orientador</Link>
+              <Link to="/actividades" className="btn btn-ghost btn-sm">{t('✨ Elegir actividad libre')}</Link>
+              <Link to="/ranking" className="btn btn-ghost btn-sm">{t('🏆 Ver ranking')}</Link>
+              <Link to="/mentoria" className="btn btn-ghost btn-sm">{t('🤝 Hablar con un orientador')}</Link>
             </div>
           </div>
         </div>

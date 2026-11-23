@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { GameProps } from './types';
+import { t } from '../../../i18n';
 
 // SORPRESA: encontrar parejas convierte la sorpresa en atención y orden.
 const EMOJIS = ['🎁', '🎈', '🎉', '🌟', '🍀', '🦋'];
@@ -14,9 +15,9 @@ export default function Memory({ addScore, say }: GameProps) {
 
   useEffect(() => {
     if (cards.every((c) => c.done)) {
-      say('¡Tablero completo! Otro más…');
-      const t = setTimeout(() => setCards(deck()), 900);
-      return () => clearTimeout(t);
+      say(t('¡Tablero completo! Otro más…'));
+      const timer = setTimeout(() => setCards(deck()), 900);
+      return () => clearTimeout(timer);
     }
   }, [cards, say]);
 
@@ -42,7 +43,7 @@ export default function Memory({ addScore, say }: GameProps) {
       <div className="memory-grid">
         {cards.map((c) => (
           <button key={c.id} className={`memory-card${c.open || c.done ? ' open' : ''}${c.done ? ' done' : ''}`}
-            onClick={() => flip(c)} aria-label={c.open || c.done ? c.e : 'Carta oculta'}>
+            onClick={() => flip(c)} aria-label={c.open || c.done ? c.e : t('Carta oculta')}>
             <span>{c.open || c.done ? c.e : '?'}</span>
           </button>
         ))}

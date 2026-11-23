@@ -22,13 +22,14 @@ import NotFound from './pages/NotFound';
 import StaffHome from './pages/StaffHome';
 import Mentees from './pages/Mentees';
 import MenteeDetail from './pages/MenteeDetail';
+import { t } from './i18n';
 
 function Protected({ children }: { children: ReactNode }) {
   const { profile, loading, userId } = useAuth();
   const loc = useLocation();
   if (loading) return <Spinner />;
   if (!userId) return <Navigate to="/login" replace state={wasExplicitSignOut() ? null : { from: loc.pathname + loc.search }} />;
-  if (!profile) return <div className="page"><div className="error">No se pudo cargar tu perfil. Verifica que el esquema SQL esté instalado en Supabase.</div></div>;
+  if (!profile) return <div className="page"><div className="error">{t('No se pudo cargar tu perfil. Verifica que el esquema SQL esté instalado en Supabase.')}</div></div>;
   return <>{children}</>;
 }
 
@@ -36,7 +37,7 @@ function RequirePerm({ perm, children }: { perm: Perm | Perm[]; children: ReactN
   const { profile } = useAuth();
   const perms = Array.isArray(perm) ? perm : [perm];
   if (!profile || !perms.some((p) => can(profile.role, p))) {
-    return <div className="page"><div className="error">No tienes permisos para ver esta sección.</div></div>;
+    return <div className="page"><div className="error">{t('No tienes permisos para ver esta sección.')}</div></div>;
   }
   return <>{children}</>;
 }

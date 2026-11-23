@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { pick, type GameProps } from './types';
+import { t } from '../../../i18n';
 
 // TRISTEZA: plantar flores con calma es una tarea suave y visible que levanta el ánimo.
 const FLOWERS = ['🌸', '🌼', '🌷', '🌻', '🌺', '💐', '🪻'];
@@ -22,7 +23,7 @@ export default function Garden({ addScore, say }: GameProps) {
     const y = Math.max(0.15, (clientY - r.top) / r.height);
     setFlowers((fs) => [...fs.slice(-40), { id: id.current++, x, y, f: pick(FLOWERS) }]);
     addScore(1);
-    if (++count.current % 5 === 0) say(pick(KIND));
+    if (++count.current % 5 === 0) say(t(pick(KIND)));
   }
 
   return (
@@ -30,7 +31,7 @@ export default function Garden({ addScore, say }: GameProps) {
       {flowers.map((f) => (
         <span key={f.id} className="sprite grow" style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%` }} aria-hidden>{f.f}</span>
       ))}
-      {flowers.length === 0 && <p className="game-tip" style={{ top: '45%' }}>Toca el jardín para plantar una flor 🌱<br />Sin prisa: una a la vez.</p>}
+      {flowers.length === 0 && <p className="game-tip" style={{ top: '45%' }}>{t('Toca el jardín para plantar una flor 🌱')}<br />{t('Sin prisa: una a la vez.')}</p>}
     </div>
   );
 }

@@ -4,8 +4,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { ErrorBox } from '../components/ui';
 import { FaceLoginPanel, isFaceDevice } from '../components/FaceLoginPanel';
+import { AuthPrefs } from '../components/SettingsCard';
 import { preloadFaceApi } from '../lib/faceDetection';
 import { errMsg } from '../context/ToastContext';
+import { t } from '../i18n';
 
 export function AuthHero() {
   return (
@@ -35,14 +37,14 @@ export default function Login() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!email.includes('@') || password.length < 6) { setError('Ingresa un correo válido y una contraseña de al menos 6 caracteres.'); return; }
+    if (!email.includes('@') || password.length < 6) { setError(t('Ingresa un correo válido y una contraseña de al menos 6 caracteres.')); return; }
     run(() => api.signIn(email, password));
   };
 
   async function forgot() {
-    if (!email.includes('@')) { setError('Escribe tu correo para enviarte el enlace de recuperación.'); return; }
+    if (!email.includes('@')) { setError(t('Escribe tu correo para enviarte el enlace de recuperación.')); return; }
     setError(null);
-    try { await api.resetPassword(email); setInfo('Te enviamos un correo para restablecer tu contraseña.'); } catch (e) { setError(errMsg(e)); }
+    try { await api.resetPassword(email); setInfo(t('Te enviamos un correo para restablecer tu contraseña.')); } catch (e) { setError(errMsg(e)); }
   }
 
   return (
@@ -50,38 +52,39 @@ export default function Login() {
       <div className="auth-card">
         <AuthHero />
         <div className="card">
-          <h2>Bienvenido de vuelta</h2>
-          <p className="muted small">Elige cómo prefieres identificarte</p>
-          <div className="seg" role="tablist" aria-label="Método de inicio de sesión">
-            <button type="button" role="tab" aria-selected={tab === 'face'} onClick={() => { setTab('face'); setError(null); }}>🙂 Mi rostro</button>
-            <button type="button" role="tab" aria-selected={tab === 'password'} onClick={() => setTab('password')}>🔑 Contraseña</button>
+          <h2>{t('Bienvenido de vuelta')}</h2>
+          <p className="muted small">{t('Elige cómo prefieres identificarte')}</p>
+          <div className="seg" role="tablist" aria-label={t('Método de inicio de sesión')}>
+            <button type="button" role="tab" aria-selected={tab === 'face'} onClick={() => { setTab('face'); setError(null); }}>{t('🙂 Mi rostro')}</button>
+            <button type="button" role="tab" aria-selected={tab === 'password'} onClick={() => setTab('password')}>{t('🔑 Contraseña')}</button>
           </div>
           {tab === 'face' ? (
             <FaceLoginPanel onSuccess={() => nav(from, { replace: true })} />
           ) : (
           <form onSubmit={submit} noValidate>
           <div className="field">
-            <label htmlFor="email">Correo electrónico</label>
-            <input id="email" className="input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" />
+            <label htmlFor="email">{t('Correo electrónico')}</label>
+            <input id="email" className="input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('tu@correo.com')} />
           </div>
           <div className="field">
-            <label htmlFor="pw">Contraseña</label>
+            <label htmlFor="pw">{t('Contraseña')}</label>
             <input id="pw" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
           <div className="spread small" style={{ marginBottom: 14 }}>
             <span />
-            <button type="button" className="icon-btn small" style={{ fontSize: '.85rem', color: 'var(--cyan)' }} onClick={forgot}>¿Olvidaste tu contraseña?</button>
+            <button type="button" className="icon-btn small" style={{ fontSize: '.85rem', color: 'var(--cyan)' }} onClick={forgot}>{t('¿Olvidaste tu contraseña?')}</button>
           </div>
           <ErrorBox error={error} />
           {info && <div className="notice">{info}</div>}
-          <button className="btn btn-cyan btn-block mt" disabled={busy}>{busy ? 'Entrando…' : 'Iniciar sesión'}</button>
+          <button className="btn btn-cyan btn-block mt" disabled={busy}>{busy ? t('Entrando…') : t('Iniciar sesión')}</button>
           </form>
           )}
-          <p className="center small mt mb0 muted">¿No tienes cuenta? <Link to="/registro">Regístrate</Link></p>
+          <p className="center small mt mb0 muted">{t('¿No tienes cuenta?')} <Link to="/registro">{t('Regístrate')}</Link></p>
           <div className="divider">o</div>
-          <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>Continuar como visitante</button>
+          <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>{t('Continuar como visitante')}</button>
         </div>
 
+        <AuthPrefs />
       </div>
     </div>
   );

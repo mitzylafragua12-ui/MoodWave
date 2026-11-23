@@ -1,8 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { EMOTION_BY_KEY, ROLE_BY_KEY } from '../lib/catalog';
 import type { EmotionKey, RoleKey } from '../lib/types';
+import { t } from '../i18n';
 
-export const Spinner = () => <div className="spinner" role="progressbar" aria-label="Cargando" />;
+export const Spinner = () => <div className="spinner" role="progressbar" aria-label={t('Cargando')} />;
 
 export function ProgressBar({ value, color, label }: { value: number; color?: string; label?: string }) {
   const pct = Math.max(0, Math.min(1, value)) * 100;
@@ -14,7 +15,7 @@ export function ProgressBar({ value, color, label }: { value: number; color?: st
 }
 
 export function EmotionChip({ emotion, confidence }: { emotion: EmotionKey | null; confidence?: number | null }) {
-  if (!emotion) return <span className="chip faint">Sin detección</span>;
+  if (!emotion) return <span className="chip faint">{t('Sin detección')}</span>;
   const e = EMOTION_BY_KEY[emotion];
   return (
     <span className="chip" style={{ '--c': e.color } as CSSProperties}>

@@ -12,6 +12,7 @@ import Meditation from './activities/Meditation';
 import Journal from './activities/Journal';
 import Minigame from './activities/Minigame';
 import Music from './activities/Music';
+import { t } from '../i18n';
 
 export interface ActivityProps {
   emotion: EmotionKey | null;
@@ -42,7 +43,7 @@ export default function ActivityRunner() {
   }
 
   if (loading) return <div className="page"><Spinner /></div>;
-  if (error || !asg) return <div className="page"><ErrorBox error={error ?? 'Actividad no encontrada'} /><Link to="/actividades" className="btn btn-ghost mt">Volver</Link></div>;
+  if (error || !asg) return <div className="page"><ErrorBox error={error ?? t('Actividad no encontrada')} /><Link to="/actividades" className="btn btn-ghost mt">{t('Volver')}</Link></div>;
 
   const a = ACTIVITY_BY_KEY[asg.activity];
   const props = { emotion: asg.emotion, onComplete: complete, busy: busy || !!profile?.suspended, autoStart: autoStart && !profile?.suspended };
@@ -50,16 +51,16 @@ export default function ActivityRunner() {
 
   return (
     <div className="page">
-      <PageHead eyebrow={`Actividad · +${a.base_xp} XP`} title={`${a.icon} ${a.name}`} color={a.color}
+      <PageHead eyebrow={t('Actividad · +{xp} XP', { xp: a.base_xp })} title={`${a.icon} ${a.name}`} color={a.color}
         subtitle={<>{a.description} {asg.emotion && <EmotionChip emotion={asg.emotion} />}</>}
-        actions={<Link to={changeUrl} className="btn btn-ghost btn-sm">Cambiar actividad</Link>} />
+        actions={<Link to={changeUrl} className="btn btn-ghost btn-sm">{t('Cambiar actividad')}</Link>} />
       {asg.completed && !result ? (
         <div className="card center">
-          <h2>Ya completaste esta actividad ✓</h2>
-          <p className="muted">Haz una nueva detección o elige otra actividad.</p>
+          <h2>{t('Ya completaste esta actividad ✓')}</h2>
+          <p className="muted">{t('Haz una nueva detección o elige otra actividad.')}</p>
           <div className="row" style={{ justifyContent: 'center' }}>
-            <Link to="/detectar" className="btn btn-primary">Nueva detección</Link>
-            <Link to="/actividades" className="btn btn-ghost">Actividades</Link>
+            <Link to="/detectar" className="btn btn-primary">{t('Nueva detección')}</Link>
+            <Link to="/actividades" className="btn btn-ghost">{t('Actividades')}</Link>
           </div>
         </div>
       ) : (

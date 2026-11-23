@@ -5,6 +5,8 @@ import type {
   LedgerEntry, MenteeDetail, MenteeRow, MyMentorship, Profile, RoleKey,
 } from '../types';
 import { ACTIVITY_BY_ID, EMOTIONS, ROLES } from '../catalog';
+import { getLang } from '../../i18n';
+import { storedTheme } from '../../i18n/theme';
 
 const emotionById = Object.fromEntries(EMOTIONS.map((e) => [e.id, e.key])) as Record<number, EmotionKey>;
 const emotionId = (k: EmotionKey) => EMOTIONS.find((e) => e.key === k)!.id;
@@ -38,7 +40,7 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
     async signUp(email, password, username) {
       const { data, error } = await sb.auth.signUp({
         email, password,
-        options: { data: { username, display_name: username }, emailRedirectTo: window.location.origin + import.meta.env.BASE_URL },
+        options: { data: { username, display_name: username, language: getLang(), theme: storedTheme() }, emailRedirectTo: window.location.origin + import.meta.env.BASE_URL },
       });
       if (error) throw new Error(error.message);
       return { needsConfirmation: !data.session };

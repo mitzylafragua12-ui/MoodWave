@@ -8,7 +8,9 @@ import { LEVEL_NAMES, LEVEL_THRESHOLDS, levelProgress, type BadgeStats } from '.
 import { fmtDate } from '../lib/date';
 import { BadgeGrid } from '../components/BadgeGrid';
 import { FaceEnrollCard } from '../components/FaceEnrollCard';
+import { SettingsCard } from '../components/SettingsCard';
 import { ErrorBox, PageHead, ProgressBar, RoleChip, Spinner } from '../components/ui';
+import { t } from '../i18n';
 
 export default function Profile() {
   const profile = useProfile();
@@ -41,18 +43,18 @@ export default function Profile() {
 
   async function save(e: FormEvent) {
     e.preventDefault();
-    if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) return setFormErr('Usuario: 3-24 caracteres (letras, números o _).');
+    if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) return setFormErr(t('Usuario: 3-24 caracteres (letras, números o _).'));
     try {
       await api.updateProfile({ username, display_name: displayName });
       await refresh();
       setEditing(false); setFormErr(null);
-      toast('Perfil actualizado');
+      toast(t('Perfil actualizado'));
     } catch (err) { setFormErr(errMsg(err)); }
   }
 
   return (
     <div className="page">
-      <PageHead eyebrow="Perfil" title="Tu progreso" color="var(--purple-soft)" />
+      <PageHead eyebrow={t('Perfil')} title={t('Tu progreso')} color="var(--purple-soft)" />
       <ErrorBox error={error} />
       <div className="split-2-1">
         <div className="stack">
@@ -62,45 +64,46 @@ export default function Profile() {
               <div style={{ flex: 1, minWidth: 200 }}>
                 <h2 className="mb0">{profile.display_name || profile.username}</h2>
                 <div className="row small muted" style={{ marginTop: 4 }}>@{profile.username} <RoleChip role={profile.role} /></div>
-                <div className="small faint" style={{ marginTop: 4 }}>Miembro desde {fmtDate(profile.created_at)}</div>
+                <div className="small faint" style={{ marginTop: 4 }}>{t('Miembro desde')} {fmtDate(profile.created_at)}</div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setEditing((v) => !v)}>{editing ? 'Cancelar' : 'Editar'}</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setEditing((v) => !v)}>{editing ? t('Cancelar') : t('Editar')}</button>
             </div>
             {editing && (
               <form onSubmit={save} className="mt">
                 <div className="grid grid-2">
-                  <div className="field"><label htmlFor="un">Usuario</label><input id="un" className="input" value={username} onChange={(e) => setUsername(e.target.value)} /></div>
-                  <div className="field"><label htmlFor="dn">Nombre visible</label><input id="dn" className="input" value={displayName} maxLength={40} onChange={(e) => setDisplayName(e.target.value)} /></div>
+                  <div className="field"><label htmlFor="un">{t('Usuario')}</label><input id="un" className="input" value={username} onChange={(e) => setUsername(e.target.value)} /></div>
+                  <div className="field"><label htmlFor="dn">{t('Nombre visible')}</label><input id="dn" className="input" value={displayName} maxLength={40} onChange={(e) => setDisplayName(e.target.value)} /></div>
                 </div>
                 <ErrorBox error={formErr} />
-                <button className="btn btn-primary btn-sm mt">Guardar</button>
+                <button className="btn btn-primary btn-sm mt">{t('Guardar')}</button>
               </form>
             )}
             <div className="mt">
               <div className="spread small" style={{ marginBottom: 6 }}>
-                <span><strong>Nivel {lp.level}</strong> · {LEVEL_NAMES[lp.level - 1]}</span>
+                <span><strong>{t('Nivel')} {lp.level}</strong> · {LEVEL_NAMES[lp.level - 1]}</span>
                 <span className="muted">{profile.xp} / {lp.next ?? '—'} XP</span>
               </div>
-              <ProgressBar value={lp.ratio} color="var(--cyan)" label="Progreso de nivel" />
+              <ProgressBar value={lp.ratio} color="var(--cyan)" label={t('Progreso de nivel')} />
             </div>
             <div className="stats-row mt">
-              <div className="stat"><div className="value" style={{ color: 'var(--red)' }}>{profile.streak}</div><div className="label">Racha actual</div></div>
-              <div className="stat"><div className="value" style={{ color: 'var(--yellow)' }}>{profile.longest_streak}</div><div className="label">Mejor racha</div></div>
-              <div className="stat"><div className="value" style={{ color: 'var(--purple-soft)' }}>{data?.earned.length ?? '—'}</div><div className="label">Logros</div></div>
+              <div className="stat"><div className="value" style={{ color: 'var(--red)' }}>{profile.streak}</div><div className="label">{t('Racha actual')}</div></div>
+              <div className="stat"><div className="value" style={{ color: 'var(--yellow)' }}>{profile.longest_streak}</div><div className="label">{t('Mejor racha')}</div></div>
+              <div className="stat"><div className="value" style={{ color: 'var(--purple-soft)' }}>{data?.earned.length ?? '—'}</div><div className="label">{t('Logros')}</div></div>
             </div>
           </div>
 
           <div className="card">
-            <h2>Logros</h2>
+            <h2>{t('Logros')}</h2>
             {!data ? <Spinner /> : <BadgeGrid badges={data.badges} earned={data.earned} stats={stats} />}
           </div>
         </div>
 
         <div className="stack">
+          <SettingsCard />
           <FaceEnrollCard />
           <div className="card">
-            <h3>Emociones (30 días)</h3>
-            {last30.length === 0 ? <p className="muted small">Sin registros.</p> : EMOTIONS.map((e) => {
+            <h3>{t('Emociones (30 días)')}</h3>
+            {last30.length === 0 ? <p className="muted small">{t('Sin registros.')}</p> : EMOTIONS.map((e) => {
               const n = last30.filter((d) => d.emotion === e.key).length;
               return (
                 <div key={e.key} className="hbar-row">
@@ -112,7 +115,7 @@ export default function Profile() {
             })}
           </div>
           <div className="card">
-            <h3>Actividades completadas</h3>
+            <h3>{t('Actividades completadas')}</h3>
             {data && ACTIVITIES.map((a) => (
               <div key={a.key} className="spread small" style={{ marginBottom: 6 }}>
                 <span>{ACTIVITY_BY_KEY[a.key].icon} {a.name}</span><strong>{data.counts[a.key]}</strong>
@@ -120,7 +123,7 @@ export default function Profile() {
             ))}
           </div>
           <div className="card">
-            <h3>Niveles</h3>
+            <h3>{t('Niveles')}</h3>
             {LEVEL_NAMES.map((n, i) => (
               <div key={n} className="spread small" style={{ marginBottom: 4, opacity: i + 1 <= lp.level ? 1 : 0.5 }}>
                 <span>{i + 1 <= lp.level ? '●' : '○'} {i + 1}. {n}</span><span className="faint">{LEVEL_THRESHOLDS[i]} XP</span>
