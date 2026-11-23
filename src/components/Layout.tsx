@@ -5,6 +5,7 @@ import { useAuth, useProfile } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { can, isStaff, ROLE_BY_KEY, type Perm } from '../lib/catalog';
 import { RoleChip } from './ui';
+import { preloadFaceApi } from '../lib/faceDetection';
 
 interface NavItem { to: string; label: string; ico: string; perm?: Perm; end?: boolean }
 
@@ -32,6 +33,8 @@ export function Layout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
+  // Precarga y calienta el modelo de emociones en segundo plano: «Detectar» abre al instante.
+  useEffect(() => { preloadFaceApi(); }, []);
 
   const staff = isStaff(profile.role);
   const work = WORK.filter((i) => can(profile.role, i.perm!));
@@ -74,7 +77,7 @@ export function Layout() {
         </div>
         {profile.suspended && (
           <div className="page" style={{ paddingBottom: 0 }}>
-            <div className="error">Tu cuenta está suspendida por un revisor de reportes. Puedes consultar tu información, pero no registrar nuevas actividades.</div>
+            <div className="error">Tu cuenta está suspendida tras revisar un reporte. Puedes consultar tu información, pero no registrar nuevas actividades.</div>
           </div>
         )}
         {profile.role === 'guest' && (

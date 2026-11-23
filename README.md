@@ -22,9 +22,8 @@ Abre http://localhost:5173. Si no hay credenciales de Supabase, la app arranca e
 |---|---|
 | demo@moodwave.app | Usuario (2 semanas de historial; compartió su historial con @orientador) |
 | editor@moodwave.app | Editor de contenido |
-| revisor@moodwave.app | Revisor de reportes |
 | orientador@moodwave.app | Orientador |
-| analista@moodwave.app | Analista |
+| analista@moodwave.app | Analista (reportes + analítica) |
 | admin@moodwave.app | Administrador |
 | superadmin@moodwave.app | Superadmin |
 
@@ -128,15 +127,14 @@ El cliente **no puede escribir XP**: `xp_ledger` no tiene política de inserció
 
 ### Roles: cada uno ve lo suyo
 
-Los nombres visibles son en español; por dentro se conservan las claves en inglés (`guest`, `listener`, `curator`, `moderator`, `mentor`…). Los roles **ya no son jerárquicos**: cada rol entra a su **propio panel** con solo sus herramientas de trabajo, y **todos** pueden usar además la parte de bienestar (detectar, actividades, progreso, ranking). Los permisos están en la tabla `role_permissions` y en `ROLE_PERMS` (`src/lib/catalog.ts`).
+Los nombres visibles son en español; por dentro se conservan las claves en inglés (`guest`, `listener`, `curator`, `mentor`…). El antiguo rol «Revisor de reportes» (`moderator`) se unió con **Analista**; al ejecutar `schema.sql`, las cuentas que lo tenían pasan solas a Analista. Los roles **ya no son jerárquicos**: cada rol entra a su **propio panel** con solo sus herramientas de trabajo, y **todos** pueden usar además la parte de bienestar (detectar, actividades, progreso, ranking). Los permisos están en la tabla `role_permissions` y en `ROLE_PERMS` (`src/lib/catalog.ts`).
 
 | Rol (clave interna) | Al entrar ve | Herramientas de trabajo |
 |---|---|---|
 | Visitante (`guest`) / Usuario (`listener`) | Su bienestar: nivel, racha, ánimo de la semana | — |
 | Editor de contenido (`curator`) | Contenido por emoción (actividad, juego, playlist) | Contenido |
-| Revisor de reportes (`moderator`) | Reportes por revisar | Reportes |
 | Orientador (`mentor`) | Personas asignadas, solicitudes, sesiones | Mis acompañados |
-| Analista (`analyst`) | Indicadores de 7 días | Analítica |
+| Analista (`analyst`) | Reportes por revisar e indicadores de 7 días | Reportes, Analítica |
 | Administrador (`admin`) | Cuentas, usuarios sin orientador, reportes y analítica | Administración, Reportes, Analítica |
 | Superadmin (`superadmin`) | Todos los paneles | Todo, incluido gestionar administradores |
 
@@ -149,9 +147,14 @@ El rango solo se usa para proteger a los administradores: suspenderlos o cambiar
 - Los consentimientos se guardan como historial de solo inserción (`mentor_consents`): queda el rastro de cuándo se dio y cuándo se retiró.
 - El orientador **nunca** ve el diario, ni con permiso.
 
-### Flujo automático
+### Flujo automático y velocidad de la cámara
 
-Al detectar la emoción, la app muestra una cuenta de 3 segundos (que se puede cancelar) y lleva **directo a la actividad recomendada**, que **arranca sola**: la meditación empieza a contar, el juego hace su cuenta regresiva y el diario abre con el cursor listo. Desde la actividad se puede pulsar *Cambiar actividad*. La música de Spotify es la excepción: los navegadores no permiten reproducir sin un toque.
+- El modelo de emociones se **descarga y precalienta en segundo plano** desde la pantalla de inicio de sesión (la primera lectura de la tarjeta gráfica es la más lenta: se hace con una imagen vacía antes de abrir la cámara).
+- Al entrar a *Detectar* la cámara se abre sola; basta con 3 lecturas seguidas para dar el resultado.
+- Medido en un equipo **sin tarjeta gráfica** (el peor caso): emoción en ~1 s y actividad en ~2 s, contra ~5.5 s y ~10 s antes. En una laptop o celular normal es aún más rápido.
+
+
+Al detectar la emoción, la app muestra una cuenta de 1 segundo (que se puede cancelar) y lleva **directo a la actividad recomendada**, que **arranca sola**: la meditación empieza a contar, el juego hace su cuenta regresiva y el diario abre con el cursor listo. Desde la actividad se puede pulsar *Cambiar actividad*. La música de Spotify es la excepción: los navegadores no permiten reproducir sin un toque.
 
 ### Un juego por emoción
 

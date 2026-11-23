@@ -28,9 +28,8 @@ insert into public.roles (id, key, name, rank, description) values
   (1, 'guest',      'Visitante',           0, 'Prueba la app sin cuenta; no aparece en el ranking.'),
   (2, 'listener',   'Usuario',            10, 'Detecta su emoción, hace actividades y gana XP.'),
   (3, 'curator',    'Editor de contenido', 20, 'Elige la música que se recomienda para cada emoción.'),
-  (4, 'moderator',  'Revisor de reportes', 30, 'Revisa los reportes de los usuarios y puede suspender cuentas.'),
   (5, 'mentor',     'Orientador',         40, 'Acompaña a sus personas asignadas; ve su historial solo con su permiso.'),
-  (6, 'analyst',    'Analista',     50, 'Consulta el dashboard analítico agregado.'),
+  (6, 'analyst',    'Analista',     50, 'Revisa reportes, puede suspender cuentas y consulta la analítica.'),
   (7, 'admin',      'Administrador',60, 'Gestiona usuarios, roles y badges.'),
   (8, 'superadmin', 'Superadmin',   70, 'Control total, incluida la asignación de administradores.')
 on conflict (id) do update set key = excluded.key, name = excluded.name,
@@ -303,12 +302,15 @@ create table if not exists public.role_permissions (
 delete from public.role_permissions;
 insert into public.role_permissions (role_id, perm) values
   (3, 'curate'),
-  (4, 'moderate'),
   (5, 'mentor'),
-  (6, 'analytics'),
+  (6, 'analytics'), (6, 'moderate'),
   (7, 'manage_users'), (7, 'manage_badges'), (7, 'analytics'), (7, 'moderate'),
   (8, 'curate'), (8, 'moderate'), (8, 'mentor'), (8, 'analytics'),
   (8, 'manage_users'), (8, 'manage_badges'), (8, 'manage_admins');
+
+-- El antiguo rol 4 («Revisor de reportes») se unió con Analista: se migran sus cuentas y se elimina.
+update public.users set role_id = 6 where role_id = 4;
+delete from public.roles where id = 4;
 
 create or replace function public.has_perm(p_perm text) returns boolean
 language sql stable security definer set search_path = public as $$

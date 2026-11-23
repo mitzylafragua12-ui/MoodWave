@@ -4,7 +4,7 @@
 reset role;
 update public.users set suspended = false where username = 'johan';
 insert into auth.users (id, email, raw_user_meta_data) values ('44444444-4444-4444-4444-444444444444','mod@x.com','{"username":"moderadora"}');
-update public.users set role_id = 4 where username = 'moderadora';
+update public.users set role_id = 6 where username = 'moderadora'; -- Analista: revisa reportes y ve analítica
 set role authenticated;
 
 -- El mentor (mitzy1) acompaña a johan desde que tomó su sesión, pero sin permiso no ve nada.
@@ -31,8 +31,9 @@ select public.set_mentor_consent(false);
 select set_config('request.jwt.claim.sub','33333333-3333-3333-3333-333333333333', false);
 select public.mentor_get_mentee('22222222-2222-2222-2222-222222222222');
 
--- Moderadora: modera, pero no administra; puede suspender a un mentor, no a un superadmin.
+-- Analista: revisa reportes y ve analítica, pero no administra; puede suspender a un orientador, no a un superadmin.
 select set_config('request.jwt.claim.sub','44444444-4444-4444-4444-444444444444', false);
+select (public.get_analytics(7) ->> 'total_users')::int > 0 as ve_analitica;
 select count(*) as reportes_visibles from public.mod_list_reports();
 select public.admin_set_role('22222222-2222-2222-2222-222222222222','mentor');
 select public.mod_set_suspended('33333333-3333-3333-3333-333333333333', true);

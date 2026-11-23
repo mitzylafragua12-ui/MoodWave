@@ -26,7 +26,7 @@ export default function Moderation() {
 
   return (
     <div className="page">
-      <PageHead eyebrow="Revisor de reportes" title="Reportes y cuentas" color="var(--red)" subtitle={`${open} reporte(s) abierto(s)`} />
+      <PageHead eyebrow="Analista" title="Reportes y cuentas" color="var(--red)" subtitle={`${open} reporte(s) abierto(s)`} />
       <ErrorBox error={reports.error || users.error} />
       <div className="card">
         <h2>Reportes</h2>

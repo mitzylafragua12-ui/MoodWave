@@ -13,7 +13,7 @@ import { DAILY_CHECKIN_XP, cappedGrant, effectiveStreak, levelForXp, nextStreak,
 import { localDay } from '../date';
 import { FACE_THRESHOLD, isValidDescriptor, matchFace } from '../faceAuth';
 
-const STORAGE_KEY = 'moodwave-demo-db-v3';
+const STORAGE_KEY = 'moodwave-demo-db-v4';
 export const DEMO_PASSWORD = 'moodwave123';
 
 interface UserRow extends Profile { email: string; password_hash: string }
@@ -211,7 +211,6 @@ export async function buildSeedDb(): Promise<DB> {
   const accounts: [string, string, RoleKey][] = [
     ['demo@moodwave.app', 'demo', 'listener'],
     ['editor@moodwave.app', 'editor', 'curator'],
-    ['revisor@moodwave.app', 'revisor', 'moderator'],
     ['orientador@moodwave.app', 'orientador', 'mentor'],
     ['analista@moodwave.app', 'analista', 'analyst'],
     ['admin@moodwave.app', 'admin', 'admin'],
@@ -222,6 +221,7 @@ export async function buildSeedDb(): Promise<DB> {
     ['diego@moodwave.app', 'diego_calma', 'listener'],
   ];
   const users = accounts.map(([email, name, role]) => e.newUser(email, pw, name, role));
+  const by = (name: string) => users.find((u) => u.username === name)!;
   users[0].display_name = 'Usuario Demo';
 
   const rand = rng(7);
@@ -257,15 +257,15 @@ export async function buildSeedDb(): Promise<DB> {
     }
   });
   e.now = () => new Date(Date.now() - 2 * 86400_000);
-  db.sessions.push({ id: uuid(), mentee_id: users[0].id, mentor_id: users[3].id, topic: 'Me cuesta organizarme con los exámenes finales.', status: 'completed', notes: 'Seguir en 1 semana.', feedback: 'Prueba bloques de estudio de 25 min con meditación de 1 min entre bloques. ¡Vas muy bien!', created_at: e.iso(), completed_at: e.iso() });
-  db.sessions.push({ id: uuid(), mentee_id: users[8].id, mentor_id: null, topic: 'Siento mucha ansiedad por las mañanas.', status: 'requested', notes: null, feedback: null, created_at: e.iso(), completed_at: null });
-  db.reports.push({ id: uuid(), reporter_id: users[7].id, reported_user_id: users[10].id, target_type: 'user', target_id: null, reason: 'Nombre de usuario inapropiado en el ranking.', status: 'open', resolution: null, resolved_by: null, resolved_at: null, created_at: e.iso() });
+  db.sessions.push({ id: uuid(), mentee_id: by('demo').id, mentor_id: by('orientador').id, topic: 'Me cuesta organizarme con los exámenes finales.', status: 'completed', notes: 'Seguir en 1 semana.', feedback: 'Prueba bloques de estudio de 25 min con meditación de 1 min entre bloques. ¡Vas muy bien!', created_at: e.iso(), completed_at: e.iso() });
+  db.sessions.push({ id: uuid(), mentee_id: by('carlos_zen').id, mentor_id: null, topic: 'Siento mucha ansiedad por las mañanas.', status: 'requested', notes: null, feedback: null, created_at: e.iso(), completed_at: null });
+  db.reports.push({ id: uuid(), reporter_id: by('ana_ola').id, reported_user_id: by('diego_calma').id, target_type: 'user', target_id: null, reason: 'Nombre de usuario inapropiado en el ranking.', status: 'open', resolution: null, resolved_by: null, resolved_at: null, created_at: e.iso() });
   // Orientación: demo y ana_ola acompañadas por @orientador; solo demo dio permiso para ver su historial.
   db.mentorships = [
-    { mentee_id: users[0].id, mentor_id: users[3].id, assigned_at: e.iso() },
-    { mentee_id: users[7].id, mentor_id: users[3].id, assigned_at: e.iso() },
+    { mentee_id: by('demo').id, mentor_id: by('orientador').id, assigned_at: e.iso() },
+    { mentee_id: by('ana_ola').id, mentor_id: by('orientador').id, assigned_at: e.iso() },
   ];
-  db.consents = [{ user_id: users[0].id, allowed: true, created_at: e.iso() }];
+  db.consents = [{ user_id: by('demo').id, allowed: true, created_at: e.iso() }];
   db.session = null;
   return db;
 }

@@ -9,7 +9,7 @@ import type { EmotionKey } from '../lib/types';
 import { ErrorBox, PageHead, ProgressBar } from '../components/ui';
 
 type Phase = 'idle' | 'loading' | 'running' | 'denied' | 'error';
-const AUTO_SECONDS = 3;
+const AUTO_SECONDS = 1;
 
 export default function Detect() {
   const profile = useProfile();
@@ -17,7 +17,7 @@ export default function Detect() {
   const toast = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const smoother = useRef(new ExpressionSmoother(8));
+  const smoother = useRef(new ExpressionSmoother(6));
   const [phase, setPhase] = useState<Phase>('idle');
   const [scores, setScores] = useState<Scores | null>(null);
   const [faceFound, setFaceFound] = useState(false);
@@ -33,9 +33,19 @@ export default function Detect() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
   };
-  useEffect(() => stop, []);
+  // La cámara se abre sola al entrar a la página (no hace falta pulsar «Activar cámara»).
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    if (!profile.suspended) start();
+    return () => { mounted.current = false; stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  const starting = useRef(false);
   async function start() {
+    if (starting.current || streamRef.current) return;
+    starting.current = true;
     setError(null);
     setPhase('loading');
     smoother.current.clear();
@@ -43,10 +53,12 @@ export default function Detect() {
     setElapsed(null);
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error('Tu navegador no permite acceder a la cámara (se requiere HTTPS).');
-      const [stream] = await Promise.all([
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false }),
-        loadFaceApi(),
-      ]);
+      // El modelo se carga en paralelo (normalmente ya viene precargado desde el inicio):
+      // la cámara se muestra de inmediato y la primera lectura llega en cuanto el modelo esté listo.
+      const model = loadFaceApi();
+      model.catch((e) => { setError('No se pudo cargar el modelo de IA: ' + errMsg(e)); setShowManual(true); });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      if (!mounted.current) { stream.getTracks().forEach((t) => t.stop()); return; } // ya salió de la página
       streamRef.current = stream;
       const v = videoRef.current!;
       v.srcObject = stream;
@@ -58,6 +70,8 @@ export default function Detect() {
       const name = (e as { name?: string }).name;
       if (name === 'NotAllowedError' || name === 'SecurityError') { setPhase('denied'); setShowManual(true); }
       else { setPhase('error'); setError(errMsg(e)); setShowManual(true); }
+    } finally {
+      starting.current = false;
     }
   }
 
@@ -69,7 +83,7 @@ export default function Detect() {
     const elapsedRef = { current: null as number | null };
     const tick = async () => {
       const v = videoRef.current;
-      if (!alive || !v || v.readyState < 2) { timer = window.setTimeout(tick, 150); return; }
+      if (!alive || !v || v.readyState < 2) { timer = window.setTimeout(tick, 50); return; }
       try {
         const s = await detectExpressions(v);
         if (!alive) return;
@@ -84,7 +98,7 @@ export default function Detect() {
           }
         }
       } catch { /* fotograma omitido */ }
-      timer = window.setTimeout(tick, 160);
+      timer = window.setTimeout(tick, 0); // lecturas seguidas, sin pausas artificiales
     };
     tick();
     return () => { alive = false; clearTimeout(timer); };

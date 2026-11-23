@@ -1,7 +1,7 @@
 export type EmotionKey = 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral';
 export type ActivityKey = 'minigame' | 'journaling' | 'meditation' | 'music';
 export type RoleKey =
-  | 'guest' | 'listener' | 'curator' | 'moderator' | 'mentor' | 'analyst' | 'admin' | 'superadmin';
+  | 'guest' | 'listener' | 'curator' | 'mentor' | 'analyst' | 'admin' | 'superadmin';
 export type BadgeRule =
   | 'detections' | 'completions' | 'activity' | 'streak' | 'level' | 'distinct_emotions' | 'distinct_activities';
 

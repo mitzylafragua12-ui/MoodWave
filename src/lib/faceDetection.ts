@@ -11,7 +11,15 @@ let loading: Promise<FaceApi> | null = null;
 
 export const EMOTION_KEYS: EmotionKey[] = ['happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised', 'neutral'];
 
-/** Carga perezosa de la librería y los modelos (TinyFaceDetector + FaceExpressionNet, ~0.5 MB). */
+/** Tamaño de entrada del detector. Debe ser el mismo en el calentamiento y en la detección. */
+const DETECT_SIZE = 224;
+const detectOptions = (lib: FaceApi) => new lib.TinyFaceDetectorOptions({ inputSize: DETECT_SIZE, scoreThreshold: 0.45 });
+
+/**
+ * Carga la librería y los modelos (TinyFaceDetector + FaceExpressionNet, ~0.5 MB) y los CALIENTA:
+ * la primera inferencia compila los programas de la tarjeta gráfica y tarda segundos; haciéndola
+ * aquí, con una imagen vacía, la primera lectura real con la cámara ya es inmediata.
+ */
 export function loadFaceApi(): Promise<FaceApi> {
   if (faceapi) return Promise.resolve(faceapi);
   loading ??= (async () => {
@@ -21,6 +29,15 @@ export function loadFaceApi(): Promise<FaceApi> {
       lib.nets.tinyFaceDetector.loadFromUri(asset('models')),
       lib.nets.faceExpressionNet.loadFromUri(asset('models')),
     ]);
+    try {
+      const c = document.createElement('canvas');
+      c.width = 640; c.height = 480;
+      c.getContext('2d')!.fillRect(0, 0, c.width, c.height);
+      await lib.detectSingleFace(c, detectOptions(lib)); // compila el detector
+      const t = lib.tf.zeros([1, 112, 112, 3]);
+      await lib.nets.faceExpressionNet.predictExpressions(t as never); // compila la red de expresiones
+      t.dispose();
+    } catch { /* el calentamiento es opcional */ }
     faceapi = lib;
     return lib;
   })();
@@ -28,12 +45,20 @@ export function loadFaceApi(): Promise<FaceApi> {
   return loading;
 }
 
+/** Precarga en segundo plano (cuando el navegador está libre) para que «Detectar» sea instantáneo. */
+export function preloadFaceApi(delayMs = 800) {
+  if (faceapi || loading) return;
+  const go = () => { loadFaceApi().catch(() => {}); };
+  const idle = (window as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
+  setTimeout(() => (idle ? idle(go, { timeout: 2500 }) : go()), delayMs);
+}
+
 export type Scores = Record<EmotionKey, number>;
 
 export async function detectExpressions(input: HTMLVideoElement): Promise<Scores | null> {
   const lib = await loadFaceApi();
   const result = await lib
-    .detectSingleFace(input, new lib.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.45 }))
+    .detectSingleFace(input, detectOptions(lib))
     .withFaceExpressions();
   if (!result) return null;
   const out = {} as Scores;
@@ -44,14 +69,15 @@ export async function detectExpressions(input: HTMLVideoElement): Promise<Scores
 /** Promedio móvil de las últimas N lecturas para estabilizar el resultado. */
 export class ExpressionSmoother {
   private buf: Scores[] = [];
-  constructor(private size = 8) {}
+  constructor(private size = 6) {}
   push(s: Scores) {
     this.buf.push(s);
     if (this.buf.length > this.size) this.buf.shift();
   }
   clear() { this.buf = []; }
   get count() { return this.buf.length; }
-  get stable() { return this.buf.length >= Math.min(5, this.size); }
+  /** Con 3 lecturas seguidas ya hay un resultado fiable (antes se esperaban 5). */
+  get stable() { return this.buf.length >= Math.min(3, this.size); }
   average(): Scores | null {
     if (!this.buf.length) return null;
     const out = {} as Scores;

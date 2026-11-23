@@ -1,14 +1,15 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { asset } from '../lib/paths';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { DEMO_PASSWORD } from '../lib/api/demoApi';
 import { ErrorBox } from '../components/ui';
 import { FaceLoginPanel, isFaceDevice } from '../components/FaceLoginPanel';
+import { preloadFaceApi } from '../lib/faceDetection';
 import { errMsg } from '../context/ToastContext';
 
 const DEMO_ACCOUNTS = [
-  ['demo', 'Usuario'], ['editor', 'Editor de contenido'], ['revisor', 'Revisor de reportes'], ['orientador', 'Orientador'],
+  ['demo', 'Usuario'], ['editor', 'Editor de contenido'], ['orientador', 'Orientador'],
   ['analista', 'Analista'], ['admin', 'Admin'], ['superadmin', 'Superadmin'],
 ] as const;
 
@@ -30,6 +31,8 @@ export default function Login() {
   const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<'face' | 'password'>(() => (isFaceDevice() ? 'face' : 'password'));
+  // Mientras la persona escribe, se descarga y calienta el modelo de emociones.
+  useEffect(() => { preloadFaceApi(1200); }, []);
 
   async function run(fn: () => Promise<void>) {
     setBusy(true); setError(null); setInfo(null);

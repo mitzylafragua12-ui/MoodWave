@@ -26,7 +26,7 @@ export function EmotionChip({ emotion, confidence }: { emotion: EmotionKey | nul
 
 export function RoleChip({ role }: { role: RoleKey }) {
   const colors: Partial<Record<RoleKey, string>> = {
-    guest: '#64748b', listener: '#22d3ee', curator: '#4ade80', moderator: '#fb923c', mentor: '#a78bfa',
+    guest: '#64748b', listener: '#22d3ee', curator: '#4ade80', mentor: '#a78bfa',
     analyst: '#38bdf8', admin: '#f43f5e', superadmin: '#eab308',
   };
   return <span className="chip" style={{ '--c': colors[role] } as CSSProperties}><span className="chip-dot" />{ROLE_BY_KEY[role].name}</span>;
