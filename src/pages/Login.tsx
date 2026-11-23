@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { asset } from '../lib/paths';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { DEMO_PASSWORD } from '../lib/api/demoApi';
@@ -14,7 +15,7 @@ const DEMO_ACCOUNTS = [
 export function AuthHero() {
   return (
     <div className="auth-hero">
-      <div className="brand"><img src="/icon.svg" alt="" style={{ width: 44, height: 44 }} /><span>Mood<b>Wave</b></span></div>
+      <div className="brand"><img src={asset('icon.svg')} alt="" style={{ width: 44, height: 44 }} /><span>Mood<b>Wave</b></span></div>
       <div className="tagline">Ride your emotions</div>
     </div>
   );

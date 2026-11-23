@@ -58,6 +58,16 @@ En la pantalla de login hay botones para entrar con cada una. El modo demo repli
    update public.users set role_id = 8 where username = 'tu_usuario';
    ```
 
+## Publicar en GitHub Pages
+
+El repositorio ya trae el workflow `.github/workflows/deploy-pages.yml`: en cada push a `main` corre las pruebas, compila con la base `/MoodWave/` y publica en **https://mitzylafragua12-ui.github.io/MoodWave/**.
+
+Solo hay que activarlo una vez: **Settings → Pages → Build and deployment → Source: GitHub Actions**. El avance se ve en la pestaña **Actions**.
+
+- Sin configurar nada se publica en **modo demo**.
+- Para usar Supabase, agrega `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en **Settings → Secrets and variables → Actions → Variables** y vuelve a ejecutar el workflow. Agrega también `https://mitzylafragua12-ui.github.io/MoodWave/` en las *Redirect URLs* de Supabase Auth.
+- GitHub Pages no tiene reescrituras de rutas: el workflow copia `index.html` como `404.html` para que funcione abrir o recargar cualquier página interna.
+
 ## Desplegar en Vercel
 
 1. Sube el repositorio a GitHub e impórtalo en Vercel (framework: **Vite**, se detecta solo).

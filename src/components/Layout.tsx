@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { asset } from '../lib/paths';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth, useProfile } from '../context/AuthContext';
 import { api } from '../lib/api';
@@ -43,7 +44,7 @@ export function Layout() {
     <div className="app-shell">
       <a href="#contenido" className="sr-only">Saltar al contenido</a>
       <aside className={`sidebar${open ? ' open' : ''}`} aria-label="Navegación principal">
-        <Link to="/" className="brand"><img src="/icon.svg" alt="" /><span>Mood<b>Wave</b></span></Link>
+        <Link to="/" className="brand"><img src={asset('icon.svg')} alt="" /><span>Mood<b>Wave</b></span></Link>
         {MAIN.map(link)}
         {staff.length > 0 && <div className="nav-section">Gestión</div>}
         {staff.map(link)}
@@ -62,7 +63,7 @@ export function Layout() {
 
       <div className="main">
         <div className="topbar">
-          <Link to="/" className="brand" style={{ fontSize: '1.2rem' }}><img src="/icon.svg" alt="" /><span>Mood<b>Wave</b></span></Link>
+          <Link to="/" className="brand" style={{ fontSize: '1.2rem' }}><img src={asset('icon.svg')} alt="" /><span>Mood<b>Wave</b></span></Link>
           <button className="icon-btn" aria-label="Abrir menú" aria-expanded={open} onClick={() => setOpen(true)}>☰</button>
         </div>
         {profile.suspended && (

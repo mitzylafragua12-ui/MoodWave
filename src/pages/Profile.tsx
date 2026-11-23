@@ -134,7 +134,7 @@ export default function Profile() {
               <p className="small muted">Restablece los datos de ejemplo de este navegador.</p>
               <button className="btn btn-danger btn-sm" onClick={async () => {
                 if (!confirm('¿Borrar todos los datos del modo demo en este navegador?')) return;
-                resetDemoData(); await signOut(); location.href = '/login';
+                resetDemoData(); await signOut(); location.href = import.meta.env.BASE_URL + 'login';
               }}>Restablecer datos demo</button>
             </div>
           )}

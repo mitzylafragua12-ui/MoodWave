@@ -4,6 +4,7 @@
  */
 import type { EmotionKey } from './types';
 import { detectBlink, eyeAspectRatio } from './faceAuth';
+import { asset } from './paths';
 
 type FaceApi = typeof import('@vladmandic/face-api');
 let faceapi: FaceApi | null = null;
@@ -18,8 +19,8 @@ export function loadFaceApi(): Promise<FaceApi> {
     const lib = await import('@vladmandic/face-api');
     await (lib.tf as unknown as { ready: () => Promise<void> }).ready();
     await Promise.all([
-      lib.nets.tinyFaceDetector.loadFromUri('/models'),
-      lib.nets.faceExpressionNet.loadFromUri('/models'),
+      lib.nets.tinyFaceDetector.loadFromUri(asset('models')),
+      lib.nets.faceExpressionNet.loadFromUri(asset('models')),
     ]);
     faceapi = lib;
     return lib;
@@ -75,9 +76,9 @@ export function loadFaceAuthModels(): Promise<void> {
   authModels ??= (async () => {
     const lib = await loadFaceApi();
     await Promise.all([
-      lib.nets.faceLandmark68TinyNet.loadFromUri('/models'),
-      lib.nets.faceLandmark68Net.loadFromUri('/models'),
-      lib.nets.faceRecognitionNet.loadFromUri('/models'),
+      lib.nets.faceLandmark68TinyNet.loadFromUri(asset('models')),
+      lib.nets.faceLandmark68Net.loadFromUri(asset('models')),
+      lib.nets.faceRecognitionNet.loadFromUri(asset('models')),
     ]);
   })();
   authModels.catch(() => { authModels = null; });

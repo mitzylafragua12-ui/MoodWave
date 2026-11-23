@@ -39,7 +39,7 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
     async signUp(email, password, username) {
       const { data, error } = await sb.auth.signUp({
         email, password,
-        options: { data: { username, display_name: username }, emailRedirectTo: window.location.origin },
+        options: { data: { username, display_name: username }, emailRedirectTo: window.location.origin + import.meta.env.BASE_URL },
       });
       if (error) throw new Error(error.message);
       return { needsConfirmation: !data.session };
@@ -54,7 +54,7 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
     },
     async signOut() { await sb.auth.signOut(); },
     async resetPassword(email) {
-      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + import.meta.env.BASE_URL });
       if (error) throw new Error(error.message);
     },
 
