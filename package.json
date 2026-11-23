@@ -1,0 +1,32 @@
+{
+  "name": "moodwave",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MoodWave — Plataforma de bienestar emocional con detección facial, actividades y gamificación",
+  "scripts": {
+    "postinstall": "node scripts/copy-models.mjs",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
+    "@vladmandic/face-api": "^1.7.15",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.6"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.1"
+  }
+}
