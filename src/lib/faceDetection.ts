@@ -66,22 +66,44 @@ export async function detectExpressions(input: HTMLVideoElement): Promise<Scores
   return out;
 }
 
-/** Promedio móvil de las últimas N lecturas para estabilizar el resultado. */
-export class ExpressionSmoother {
-  private buf: Scores[] = [];
-  constructor(private size = 6) {}
-  push(s: Scores) {
-    this.buf.push(s);
-    if (this.buf.length > this.size) this.buf.shift();
+/** Segundos mínimos de análisis con el rostro visible antes de dar un resultado. */
+export const MIN_ANALYSIS_SECONDS = 6;
+/** Lecturas mínimas (por si el equipo es muy lento y en 6 s hace muy pocas). */
+export const MIN_READINGS = 8;
+/** Un salto mayor entre lecturas (pestaña en segundo plano, equipo trabado) cuenta como este máximo. */
+const MAX_GAP_MS = 1500;
+
+/**
+ * Acumula todas las lecturas del análisis y el tiempo con la cara a cuadro.
+ * El resultado es el promedio de toda la ventana: una mueca o un parpadeo no cambian la emoción.
+ * Si la cara sale de cuadro el reloj se pausa (no se reinicia).
+ */
+export class ExpressionWindow {
+  private sum = {} as Scores;
+  private n = 0;
+  private faceMs = 0;
+  private lastFaceAt: number | null = null;
+  constructor(readonly minSeconds = MIN_ANALYSIS_SECONDS, readonly minReadings = MIN_READINGS) { this.clear(); }
+  clear() {
+    for (const k of EMOTION_KEYS) this.sum[k] = 0;
+    this.n = 0; this.faceMs = 0; this.lastFaceAt = null;
   }
-  clear() { this.buf = []; }
-  get count() { return this.buf.length; }
-  /** Con 3 lecturas seguidas ya hay un resultado fiable (antes se esperaban 5). */
-  get stable() { return this.buf.length >= Math.min(3, this.size); }
+  /** `s` es null cuando en esa lectura no se vio cara; `now` en milisegundos. */
+  push(s: Scores | null, now: number) {
+    if (!s) { this.lastFaceAt = null; return; }
+    if (this.lastFaceAt !== null) this.faceMs += Math.min(Math.max(0, now - this.lastFaceAt), MAX_GAP_MS);
+    this.lastFaceAt = now;
+    for (const k of EMOTION_KEYS) this.sum[k] += s[k];
+    this.n++;
+  }
+  get count() { return this.n; }
+  get seconds() { return this.faceMs / 1000; }
+  get progress() { return Math.min(1, this.seconds / this.minSeconds); }
+  get complete() { return this.seconds >= this.minSeconds && this.n >= this.minReadings; }
   average(): Scores | null {
-    if (!this.buf.length) return null;
+    if (!this.n) return null;
     const out = {} as Scores;
-    for (const k of EMOTION_KEYS) out[k] = this.buf.reduce((s, b) => s + b[k], 0) / this.buf.length;
+    for (const k of EMOTION_KEYS) out[k] = this.sum[k] / this.n;
     return out;
   }
 }

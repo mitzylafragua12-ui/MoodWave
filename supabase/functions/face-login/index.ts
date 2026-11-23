@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
   if (!hit) {
     await admin.from('face_login_attempts').insert({ ip, success: false });
-    return json(401, { error: 'No te reconozco. Usa tu contraseña o vuelve a registrar tu rostro.' });
+    return json(401, { error: 'No te reconozco. Si aún no registras tu rostro, entra con tu contraseña y regístralo en Perfil → Entrar con mi rostro.' });
   }
 
   const { data: profile } = await admin.from('users').select('suspended').eq('id', hit.user_id).single();

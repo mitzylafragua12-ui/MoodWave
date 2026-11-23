@@ -39,9 +39,11 @@ export function FaceLoginPanel({ onSuccess }: { onSuccess: () => void }) {
       const descs = await sampleDescriptors(cam.videoRef.current!, LOGIN_SAMPLES,
         (i, n, ok) => setHint(t(ok ? 'Identificando {i}/{n}' : 'Identificando {i}/{n} — no veo tu cara', { i, n })));
       if (descs.length < 3) throw new Error(t('No pude ver bien tu cara. Acércate, ponte de frente y busca luz.'));
+      // Solo el servidor sabe si el rostro coincide con una cuenta: no decir «te reconocí» antes.
+      setHint(t('Comparando con los rostros registrados…'));
+      await api.faceLogin(meanDescriptor(descs));
       setStep('entering');
       setHint(t('¡Te reconocí! Entrando…'));
-      await api.faceLogin(meanDescriptor(descs));
       markFaceDevice(true);
       cam.stop();
       onSuccess();

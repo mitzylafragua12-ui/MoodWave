@@ -1,6 +1,11 @@
 // Traducciones al inglés. La clave es el texto en español tal como aparece en el código.
 // Si agregas un texto nuevo con t('...'), agrega aquí su traducción (la prueba i18n.test.ts lo verifica).
 export const EN: Record<string, string> = {
+  "No te reconozco. Si aún no registras tu rostro, entra con tu contraseña y regístralo en Perfil → Entrar con mi rostro.": "I don't recognize you. If you haven't registered your face yet, sign in with your password and register it in Profile → Sign in with my face.",
+  "Comparando con los rostros registrados…": "Comparing with registered faces…",
+  "Progreso del análisis": "Analysis progress",
+  "Sigue mirando a la cámara: analizo {s} s para no equivocarme ({done} de {total} s).": "Keep looking at the camera: I analyze for {s} s to get it right ({done} of {total} s).",
+  "Análisis completo: {n} lecturas en {s} s": "Analysis complete: {n} readings in {s} s",
   "% limpio": "% clean",
   "(México, 24 h).": "(Mexico, 24 h).",
   "(suspendido)": "(suspended)",
@@ -262,7 +267,6 @@ export const EN: Record<string, string> = {
   "Las contraseñas no coinciden.": "Passwords don't match.",
   "Las entradas del diario son privadas y no aparecen aquí.": "Journal entries are private and don't appear here.",
   "Leaderboard": "Leaderboard",
-  "Lectura estable en {s} s": "Stable reading in {s} s",
   "Leyenda MoodWave": "MoodWave Legend",
   "Libera la tensión reventando burbujas.": "Release tension by popping bubbles.",
   "Libre": "Free choice",
@@ -340,7 +344,6 @@ export const EN: Record<string, string> = {
   "No se pudo cargar tu perfil. Verifica que el esquema SQL esté instalado en Supabase.": "Your profile couldn't be loaded. Check that the SQL schema is installed in Supabase.",
   "No se pudo verificar el rostro": "The face couldn't be verified",
   "No se pudo verificar tu rostro. Intenta de nuevo o entra con contraseña.": "Your face couldn't be verified. Try again or sign in with your password.",
-  "No te reconozco. Usa tu contraseña o vuelve a registrar tu rostro.": "I don't recognize you. Use your password or register your face again.",
   "No tienes permisos para ver esta sección.": "You don't have permission to view this section.",
   "Nombre": "Name",
   "Nombre de usuario": "Username",

@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { useProfile } from '../context/AuthContext';
 import { errMsg, useToast } from '../context/ToastContext';
 import { EMOTIONS, EMOTION_BY_KEY } from '../lib/catalog';
-import { dominant, detectExpressions, ExpressionSmoother, loadFaceApi, type Scores, EMOTION_KEYS } from '../lib/faceDetection';
+import { dominant, detectExpressions, ExpressionWindow, loadFaceApi, MIN_ANALYSIS_SECONDS, type Scores, EMOTION_KEYS } from '../lib/faceDetection';
 import type { EmotionKey } from '../lib/types';
 import { ErrorBox, PageHead, ProgressBar } from '../components/ui';
 import { t } from '../i18n';
@@ -19,7 +19,7 @@ export default function Detect() {
   const toast = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const smoother = useRef(new ExpressionSmoother(6));
+  const analysis = useRef(new ExpressionWindow());
   const [phase, setPhase] = useState<Phase>('idle');
   const [scores, setScores] = useState<Scores | null>(null);
   const [faceFound, setFaceFound] = useState(false);
@@ -28,8 +28,8 @@ export default function Detect() {
   const [showManual, setShowManual] = useState(false);
   const [autoGo, setAutoGo] = useState(true);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState<number | null>(null);
-  const startedAt = useRef(0);
+  const [elapsed, setElapsed] = useState<{ secs: number; n: number } | null>(null);
+  const [progress, setProgress] = useState(0);
 
   const stop = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -50,9 +50,10 @@ export default function Detect() {
     starting.current = true;
     setError(null);
     setPhase('loading');
-    smoother.current.clear();
+    analysis.current.clear();
     setScores(null);
     setElapsed(null);
+    setProgress(0);
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error(t('Tu navegador no permite acceder a la cámara (se requiere HTTPS).'));
       // El modelo se carga en paralelo (normalmente ya viene precargado desde el inicio):
@@ -65,7 +66,6 @@ export default function Detect() {
       const v = videoRef.current!;
       v.srcObject = stream;
       await v.play();
-      startedAt.current = performance.now();
       setPhase('running');
     } catch (e) {
       stop();
@@ -77,12 +77,12 @@ export default function Detect() {
     }
   }
 
-  // Bucle de detección (~6 lecturas por segundo).
+  // Bucle de detección: lee sin pausas y acumula al menos 6 s con la cara a cuadro.
   useEffect(() => {
     if (phase !== 'running') return;
     let alive = true;
     let timer: number;
-    const elapsedRef = { current: null as number | null };
+    let completed = false;
     const tick = async () => {
       const v = videoRef.current;
       if (!alive || !v || v.readyState < 2) { timer = window.setTimeout(tick, 50); return; }
@@ -90,13 +90,14 @@ export default function Detect() {
         const s = await detectExpressions(v);
         if (!alive) return;
         setFaceFound(!!s);
+        const w = analysis.current;
+        w.push(s, performance.now());
         if (s) {
-          smoother.current.push(s);
-          setScores(smoother.current.average());
-          if (smoother.current.stable && elapsedRef.current === null) {
-            const secs = (performance.now() - startedAt.current) / 1000;
-            elapsedRef.current = secs;
-            setElapsed(secs);
+          setScores(w.average());
+          setProgress(w.progress);
+          if (w.complete && !completed) {
+            completed = true;
+            setElapsed({ secs: w.seconds, n: w.count });
           }
         }
       } catch { /* fotograma omitido */ }
@@ -107,8 +108,9 @@ export default function Detect() {
   }, [phase]);
 
   const result = scores ? dominant(scores) : null;
-  const stable = smoother.current.stable && faceFound;
-  const ready = phase === 'running' && !!result && smoother.current.stable;
+  const done = elapsed !== null;
+  const stable = done && faceFound;
+  const ready = phase === 'running' && !!result && done;
   const latest = useRef<{ emotion: EmotionKey; confidence: number; scores: Scores } | null>(null);
   latest.current = result && scores ? { ...result, scores } : null;
   const firing = useRef(false);
@@ -175,7 +177,7 @@ export default function Detect() {
             )}
           </div>
           <ErrorBox error={error} />
-          {phase === 'running' && <button className="btn btn-ghost btn-sm" onClick={() => { stop(); setPhase('idle'); setScores(null); }}>{t('Detener cámara')}</button>}
+          {phase === 'running' && <button className="btn btn-ghost btn-sm" onClick={() => { stop(); setPhase('idle'); setScores(null); setElapsed(null); setProgress(0); analysis.current.clear(); }}>{t('Detener cámara')}</button>}
         </div>
 
         <div className="stack">
@@ -196,8 +198,15 @@ export default function Detect() {
                     </div>
                   ))}
                 </div>
-                {elapsed !== null && <p className="small faint">{t('Lectura estable en {s} s', { s: elapsed.toFixed(1) })}</p>}
-                {countdown !== null && !saving ? (
+                {!done ? (
+                  <div className="mt" aria-live="polite">
+                    <ProgressBar value={progress} color="var(--cyan)" label={t('Progreso del análisis')} />
+                    <p className="small muted mb0">{t('Sigue mirando a la cámara: analizo {s} s para no equivocarme ({done} de {total} s).', { s: MIN_ANALYSIS_SECONDS, done: Math.floor(progress * MIN_ANALYSIS_SECONDS), total: MIN_ANALYSIS_SECONDS })}</p>
+                  </div>
+                ) : (
+                  <p className="small faint">{t('Análisis completo: {n} lecturas en {s} s', { n: elapsed!.n, s: elapsed!.secs.toFixed(1) })}</p>
+                )}
+                {!done ? null : countdown !== null && !saving ? (
                   <div className="notice mt spread" aria-live="polite">
                     <span>{t('Te llevo a tu actividad en')} <strong>{countdown}</strong>…</span>
                     <button className="btn btn-ghost btn-sm" onClick={() => setAutoGo(false)}>{t('Cancelar')}</button>

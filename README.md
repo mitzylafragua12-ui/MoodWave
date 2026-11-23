@@ -219,8 +219,9 @@ El rango solo se usa para proteger a los administradores: suspenderlos o cambiar
 ### Flujo automático y velocidad de la cámara
 
 - El modelo de emociones se **descarga y precalienta en segundo plano** desde la pantalla de inicio de sesión (la primera lectura de la tarjeta gráfica es la más lenta: se hace con una imagen vacía antes de abrir la cámara).
-- Al entrar a *Detectar* la cámara se abre sola; basta con 3 lecturas seguidas para dar el resultado.
-- Medido en un equipo **sin tarjeta gráfica** (el peor caso): emoción en ~1 s y actividad en ~2 s, contra ~5.5 s y ~10 s antes. En una laptop o celular normal es aún más rápido.
+- Al entrar a *Detectar* la cámara se abre sola y empieza a leer en cuanto el modelo está listo (en un equipo sin tarjeta gráfica, ~1 s).
+- **El análisis dura al menos 6 s con la cara a cuadro** (`MIN_ANALYSIS_SECONDS`) y como mínimo 8 lecturas, para no equivocarse con un gesto suelto. El resultado es el promedio de todas las lecturas de esa ventana. Si la cara sale de cuadro, el reloj se pausa sin reiniciarse. Una barra muestra el avance.
+- El inicio de sesión con rostro **no** espera: identifica con 5 capturas en cuanto se pulsa *Identificarme*.
 
 
 Al detectar la emoción, la app muestra una cuenta de 1 segundo (que se puede cancelar) y lleva **directo a la actividad recomendada**, que **arranca sola**: la meditación empieza a contar, el juego hace su cuenta regresiva y el diario abre con el cursor listo. Desde la actividad se puede pulsar *Cambiar actividad*. La música de Spotify es la excepción: los navegadores no permiten reproducir sin un toque.
@@ -245,7 +246,7 @@ Si el minijuego se elige sin detección, se muestra un selector con los 7. Cada 
 
 | Requerimiento / Historia | Dónde se implementa |
 |---|---|
-| RF-01 / HU-02 Detección en tiempo real | `pages/Detect.tsx`, `lib/faceDetection.ts` (promedio móvil de 8 lecturas; lectura estable en ~1–2 s una vez cargado el modelo) |
+| RF-01 / HU-02 Detección en tiempo real | `pages/Detect.tsx`, `lib/faceDetection.ts` (`ExpressionWindow`: promedio de todas las lecturas durante al menos 6 s) |
 | RF-02 / HU-03 Recomendación automática (≥ 3 opciones) | `emotion_activity_map` + `record_detection`; `pages/Activities.tsx` muestra las 4 ordenadas |
 | RF-03 / HU-06 Historial y gráfica semanal | `pages/History.tsx`, `components/WeeklyMoodChart.tsx` |
 | RF-04 / HU-04 XP, niveles, badges, rachas | `complete_activity`, `evaluate_badges`, `pages/Profile.tsx` |
