@@ -1072,6 +1072,25 @@ grant select (user_id, consent_at, updated_at) on public.face_templates to authe
 -- face_login_attempts: sin políticas → inaccesible para clientes (solo service_role).
 revoke all on public.face_login_attempts from anon, authenticated;
 
+-- Privilegios de tabla EXPLÍCITOS. Los proyectos nuevos de Supabase ya no los otorgan
+-- automáticamente a anon/authenticated/service_role; las políticas RLS de arriba siguen
+-- decidiendo qué filas ve o cambia cada quien.
+grant usage on schema public to anon, authenticated, service_role;
+grant select on public.roles, public.role_permissions, public.emotions, public.activities,
+  public.emotion_activity_map, public.emotion_playlists, public.badges to anon, authenticated;
+grant update (spotify_playlist_id, title, curated_by, updated_at) on public.emotion_playlists to authenticated; -- RLS: curate
+grant select on public.users to authenticated;                                  -- RLS: el propio perfil (o manage_users)
+grant select on public.detections, public.activity_assignments, public.activity_completions,
+  public.xp_ledger, public.user_badges to authenticated;                        -- RLS: solo los propios; escritura vía RPC
+grant select, delete on public.journal_entries to authenticated;                -- RLS: solo el propio diario
+grant insert, update, delete on public.badges to authenticated;                 -- RLS: manage_badges
+grant select, insert, update on public.mentor_sessions to authenticated;        -- RLS: propias / orientador
+grant select, insert, update on public.reports to authenticated;                -- RLS: crear propios / moderate
+grant usage on all sequences in schema public to authenticated;
+-- La Edge Function face-login usa service_role (omite RLS, pero no los privilegios).
+grant all on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
 -- role_permissions: lectura pública (la UI decide qué mostrar); mentorships/consents solo vía RPC.
 drop policy if exists "catalog read" on public.role_permissions;
 create policy "catalog read" on public.role_permissions for select using (true);

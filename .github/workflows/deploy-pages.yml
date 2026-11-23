@@ -23,10 +23,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Verificar credenciales de Supabase
+      - name: Credenciales de Supabase
+        # Por defecto se usan las de .env.production. Si se definen las variables del repositorio
+        # (Settings → Secrets and variables → Actions → Variables), tienen prioridad.
         run: |
-          if [ -z "${{ vars.VITE_SUPABASE_URL }}" ] || [ -z "${{ vars.VITE_SUPABASE_ANON_KEY }}" ]; then
-            echo "::error::Faltan VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY en Settings → Secrets and variables → Actions → Variables"
+          if [ -n "${{ vars.VITE_SUPABASE_URL }}" ] && [ -n "${{ vars.VITE_SUPABASE_ANON_KEY }}" ]; then
+            printf 'VITE_SUPABASE_URL=%s\nVITE_SUPABASE_ANON_KEY=%s\n' "${{ vars.VITE_SUPABASE_URL }}" "${{ vars.VITE_SUPABASE_ANON_KEY }}" > .env.production.local
+          fi
+          if ! grep -qs '^VITE_SUPABASE_URL=.\+' .env.production.local .env.production || ! grep -qs '^VITE_SUPABASE_ANON_KEY=.\+' .env.production.local .env.production; then
+            echo "::error::Faltan VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY (.env.production o variables del repositorio)"
             exit 1
           fi
       - run: npm ci
@@ -36,10 +41,6 @@ jobs:
         env:
           # La app se sirve en https://<usuario>.github.io/<repositorio>/
           VITE_BASE: /${{ github.event.repository.name }}/
-          # Credenciales de Supabase como "Repository variables" (Settings → Secrets and variables → Actions → Variables).
-          # La anon key es pública por diseño (la seguridad la dan las políticas RLS).
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - name: Rutas de la SPA (GitHub Pages no tiene reescrituras)
         run: cp dist/index.html dist/404.html && touch dist/.nojekyll
       - uses: actions/upload-pages-artifact@v3

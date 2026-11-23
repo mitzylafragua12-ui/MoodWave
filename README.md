@@ -10,10 +10,12 @@ Proyecto de la asignatura *Arquitectura de Software* — Ing. en Desarrollo y Ge
 
 MoodWave trabaja **solo con la base de datos real** (Supabase): las cuentas se crean desde la pantalla *Regístrate*. Ya no existe modo demo ni cuentas de ejemplo.
 
+> **Estado actual:** ya está conectado al proyecto Supabase `mujauhrhgeuzbdxyqiju` (región us-east-2): esquema instalado, *Confirm email* desactivado, visitantes habilitados, URLs de GitHub Pages autorizadas y la función `face-login` desplegada. La URL y la clave pública están en `.env.production`. Los pasos de abajo sirven para reinstalar o para montarlo en otro proyecto.
+
 ### 1. Base de datos (una sola vez)
 
 1. Crea un proyecto en [supabase.com](https://supabase.com) (el plan gratuito alcanza).
-2. **SQL Editor → New query**: pega y ejecuta todo [`supabase/schema.sql`](supabase/schema.sql). Crea tablas, catálogos, funciones, triggers y políticas RLS. Se puede volver a ejecutar sin problema.
+2. **SQL Editor → New query**: pega y ejecuta todo [`supabase/schema.sql`](supabase/schema.sql). Crea tablas, catálogos, funciones, triggers, políticas RLS y los privilegios de tabla (los proyectos nuevos de Supabase ya no los dan solos). Se puede volver a ejecutar sin problema.
 3. **Authentication → Sign In / Providers → Email**:
    - Para el proyecto escolar conviene **desactivar *Confirm email***: el correo gratuito de Supabase solo envía unos pocos mensajes por hora y los registros se quedarían esperando la confirmación. Si lo dejan activo, cada persona debe abrir el enlace de su correo antes de entrar.
    - (Opcional) Activa **Anonymous sign-ins** para el botón *Continuar como visitante*.
@@ -30,10 +32,10 @@ MoodWave trabaja **solo con la base de datos real** (Supabase): las cuentas se c
 
 ### 2. Publicar en GitHub Pages
 
-1. **Project Settings → API** en Supabase: copia la *Project URL* y la clave *anon public* (es pública por diseño; lo que protege los datos son las políticas RLS).
-2. En GitHub: **Settings → Secrets and variables → Actions → pestaña Variables → New repository variable**, crea `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
-3. **Settings → Pages → Source: GitHub Actions** (ya hecho).
-4. En cada push a `main` el workflow verifica que existan las variables, corre las pruebas, compila con la base `/MoodWave/` y publica en **https://mitzylafragua12-ui.github.io/MoodWave/**. Para publicar sin cambios de código: **Actions → Publicar en GitHub Pages → Run workflow**.
+1. La URL y la clave *anon public* del proyecto (**Project Settings → API**) van en [`.env.production`](.env.production). La clave anon es pública por diseño (viaja en el navegador); lo que protege los datos son las políticas RLS. **Nunca** pongas ahí la clave *service_role*.
+2. **Settings → Pages → Source: GitHub Actions** (ya hecho).
+3. En cada push a `main` el workflow corre las pruebas, compila con la base `/MoodWave/` y publica en **https://mitzylafragua12-ui.github.io/MoodWave/**. Para publicar sin cambios de código: **Actions → Publicar en GitHub Pages → Run workflow**.
+4. (Opcional) Si defines las variables de repositorio `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (**Settings → Secrets and variables → Actions → Variables**), tienen prioridad sobre `.env.production`.
 
 GitHub Pages no tiene reescrituras de rutas: el workflow copia `index.html` como `404.html` para que se pueda abrir o recargar cualquier página interna.
 

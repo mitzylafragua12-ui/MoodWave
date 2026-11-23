@@ -9,9 +9,8 @@ create table auth.users (id uuid primary key default gen_random_uuid(), email te
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema public, auth to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;
--- Igual que Supabase: todo objeto nuevo en public recibe privilegios para anon/authenticated/service_role;
--- RLS, los REVOKE y los grants por columna de schema.sql hacen el resto.
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
-alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+-- Igual que los proyectos NUEVOS de Supabase: las tablas que crea postgres en public NO reciben
+-- privilegios de lectura/escritura para anon/authenticated/service_role (solo Dxtm). Por eso
+-- schema.sql los otorga explícitamente.
+alter default privileges in schema public grant delete, truncate, references, trigger on tables to anon, authenticated, service_role;
 grant usage on schema public to service_role;
