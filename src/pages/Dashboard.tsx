@@ -95,7 +95,7 @@ export default function Dashboard() {
             <div className="card card-accent" style={{ '--accent': 'var(--cyan)' } as CSSProperties}>
               <div className="eyebrow">Nuevo</div>
               <h3>🙂 Entra con tu rostro</h3>
-              <p className="small muted">Registra tu rostro y la próxima vez solo tendrás que mirar a la cámara y parpadear.</p>
+              <p className="small muted">Registra tu rostro y la próxima vez solo tendrás que mirar a la cámara.</p>
               <Link to="/perfil#rostro" className="btn btn-ghost btn-sm">Registrar mi rostro</Link>
             </div>
           )}

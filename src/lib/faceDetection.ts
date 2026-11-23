@@ -3,7 +3,6 @@
  * Todo corre en el navegador: ningún fotograma sale del dispositivo (RNF-01).
  */
 import type { EmotionKey } from './types';
-import { detectBlink, eyeAspectRatio } from './faceAuth';
 import { asset } from './paths';
 
 type FaceApi = typeof import('@vladmandic/face-api');
@@ -71,49 +70,17 @@ export function dominant(s: Scores): { emotion: EmotionKey; confidence: number }
 
 let authModels: Promise<void> | null = null;
 
-/** Modelos extra para identidad: landmarks (tiny para parpadeo, completo para alinear) y reconocimiento. */
+/** Modelos extra para identidad: landmarks (para alinear la cara) y reconocimiento. */
 export function loadFaceAuthModels(): Promise<void> {
   authModels ??= (async () => {
     const lib = await loadFaceApi();
     await Promise.all([
-      lib.nets.faceLandmark68TinyNet.loadFromUri(asset('models')),
       lib.nets.faceLandmark68Net.loadFromUri(asset('models')),
       lib.nets.faceRecognitionNet.loadFromUri(asset('models')),
     ]);
   })();
   authModels.catch(() => { authModels = null; });
   return authModels;
-}
-
-export interface BlinkFrame { face: boolean; eyesClosed: boolean; fps: number }
-
-/**
- * Prueba de vida: espera un parpadeo. Un parpadeo dura 0,1–0,4 s, así que va rápido:
- * landmarks pequeños y entrada de 224 px, sin descriptor ni expresiones.
- */
-export async function waitBlink(video: HTMLVideoElement, opts: {
-  timeoutMs?: number; onFrame?: (f: BlinkFrame) => void; signal?: AbortSignal;
-} = {}): Promise<{ ok: boolean; seen: number }> {
-  const lib = await loadFaceApi();
-  await loadFaceAuthModels();
-  // 224 px: casi igual de rápido que 192 y bastante más robusto con caras inclinadas.
-  const fast = new lib.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
-  const ears: number[] = [];
-  const t0 = performance.now();
-  let frames = 0;
-  while (performance.now() - t0 < (opts.timeoutMs ?? 12000)) {
-    if (opts.signal?.aborted) break;
-    const r = await lib.detectSingleFace(video, fast).withFaceLandmarks(true);
-    frames++;
-    const fps = Math.round(frames / ((performance.now() - t0) / 1000));
-    if (!r) { opts.onFrame?.({ face: false, eyesClosed: false, fps }); continue; }
-    const ear = (eyeAspectRatio(r.landmarks.getLeftEye()) + eyeAspectRatio(r.landmarks.getRightEye())) / 2;
-    ears.push(ear);
-    const base = Math.max(...ears);
-    opts.onFrame?.({ face: true, eyesClosed: ear < base * 0.8, fps });
-    if (detectBlink(ears)) return { ok: true, seen: ears.length };
-  }
-  return { ok: false, seen: ears.length };
 }
 
 /** Toma n capturas con descriptor facial (128 números) para promediarlas. */

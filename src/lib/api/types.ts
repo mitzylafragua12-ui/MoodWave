@@ -17,7 +17,7 @@ export interface Api {
   signOut(): Promise<void>;
   resetPassword(email: string): Promise<void>;
 
-  // Inicio de sesión con rostro (descriptor de 128 números calculado en el navegador tras el parpadeo)
+  // Inicio de sesión con rostro (descriptor de 128 números calculado en el navegador)
   faceLogin(descriptor: number[]): Promise<void>;
   getFaceStatus(): Promise<FaceStatus>;
   enrollFace(descriptor: number[]): Promise<void>;

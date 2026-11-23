@@ -1,8 +1,7 @@
 // Edge Function: inicio de sesión con rostro.
 //
-// Recibe el descriptor facial (128 números) calculado en el navegador DESPUÉS de la prueba
-// de parpadeo, lo compara con las plantillas guardadas (1:N, umbral 0.45) usando service_role
-// y, si hay coincidencia, emite un token de un solo uso para abrir la sesión con
+// Recibe el descriptor facial (128 números) calculado en el navegador, lo compara con
+// las plantillas guardadas (1:N, umbral 0.45) usando service_role y, si hay coincidencia, emite un token de un solo uso para abrir la sesión con
 // supabase.auth.verifyOtp({ token_hash, type: 'magiclink' }).
 //
 // Desplegar:  supabase functions deploy face-login

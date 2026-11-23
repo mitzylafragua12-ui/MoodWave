@@ -1,7 +1,7 @@
 /**
  * Lógica pura del inicio de sesión con rostro (sin navegador, con pruebas).
  * Portada del prototipo anterior del equipo: plantilla de 128 números promediada,
- * identificación 1:N con umbral estricto y prueba de vida por parpadeo (EAR).
+ * e identificación 1:N con umbral estricto.
  */
 
 export const DESCRIPTOR_LENGTH = 128;
@@ -44,36 +44,4 @@ export function matchFace<T extends { descriptor: ArrayLike<number> | null }>(
     if (!best || distance < best.distance) best = { candidate: c, distance };
   }
   return best && best.distance <= threshold ? best : null;
-}
-
-export interface Point { x: number; y: number }
-
-/** Eye Aspect Ratio: alto del ojo entre su ancho (6 puntos del modelo de 68). Al parpadear cae en picado. */
-export function eyeAspectRatio(eye: Point[]): number {
-  if (eye.length !== 6) throw new Error('el ojo necesita 6 puntos');
-  const d = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y);
-  const ancho = d(eye[0], eye[3]);
-  if (!ancho) return 0;
-  return (d(eye[1], eye[5]) + d(eye[2], eye[4])) / (2 * ancho);
-}
-
-/**
- * Un parpadeo real es abierto → cerrado → abierto; una foto tiene un EAR plano.
- * Los umbrales son relativos al ojo abierto de CADA persona (máximo observado), para que
- * funcione con gafas u ojos más rasgados.
- */
-export function detectBlink(ears: number[], closedRatio = 0.8, openRatio = 0.92): boolean {
-  if (ears.length < 4) return false;
-  const base = Math.max(...ears);
-  if (base <= 0.1) return false;
-  const closed = base * closedRatio;
-  const open = base * openRatio;
-  let abierto = false;
-  let cerrado = false;
-  for (const e of ears) {
-    if (!abierto) { if (e > open) abierto = true; continue; }
-    if (!cerrado) { if (e < closed) cerrado = true; continue; }
-    if (e > open) return true;
-  }
-  return false;
 }

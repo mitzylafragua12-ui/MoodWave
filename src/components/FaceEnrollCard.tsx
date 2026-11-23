@@ -61,8 +61,8 @@ export function FaceEnrollCard() {
       </div>
       <p className="small muted mt">
         {enrolled
-          ? `Registrado el ${fmtDate(status.data!.updated_at!)}. Al entrar te pediremos un parpadeo para comprobar que eres tú y no una foto.`
-          : 'Registra tu rostro para iniciar sesión sin contraseña: mira a la cámara, parpadea y listo.'}
+          ? `Registrado el ${fmtDate(status.data!.updated_at!)}. Para entrar solo tienes que mirar a la cámara.`
+          : 'Registra tu rostro para iniciar sesión sin contraseña: solo mira a la cámara y listo.'}
       </p>
       {!open ? (
         <div className="row">

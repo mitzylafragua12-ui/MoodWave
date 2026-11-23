@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectBlink, euclidean, eyeAspectRatio, isValidDescriptor, matchFace, meanDescriptor } from './faceAuth';
+import { euclidean, isValidDescriptor, matchFace, meanDescriptor } from './faceAuth';
 
 const vec = (v: number) => new Array(128).fill(v);
 
@@ -21,25 +21,5 @@ describe('descriptores', () => {
     expect(matchFace(vec(0.031), users)?.candidate.id).toBe('b');
     // 0.2 por componente → distancia ≈ 2.26: nadie
     expect(matchFace(vec(0.2), users)).toBeNull();
-  });
-});
-
-describe('prueba de vida', () => {
-  const eye = (h: number) => [{ x: 0, y: 0 }, { x: 1, y: -h }, { x: 2, y: -h }, { x: 3, y: 0 }, { x: 2, y: h }, { x: 1, y: h }];
-  it('EAR baja al cerrar el ojo', () => {
-    expect(eyeAspectRatio(eye(0.5))).toBeCloseTo(1 / 3);
-    expect(eyeAspectRatio(eye(0.1))).toBeLessThan(0.1);
-  });
-  it('detecta abierto → cerrado → abierto', () => {
-    expect(detectBlink([0.3, 0.31, 0.12, 0.3])).toBe(true);
-  });
-  it('una foto (EAR plano) no pasa', () => {
-    expect(detectBlink([0.3, 0.29, 0.3, 0.3, 0.29, 0.3])).toBe(false);
-  });
-  it('ojos cerrados sin volver a abrir no pasa', () => {
-    expect(detectBlink([0.3, 0.3, 0.1, 0.1])).toBe(false);
-  });
-  it('se adapta a ojos más rasgados (umbral relativo)', () => {
-    expect(detectBlink([0.2, 0.21, 0.13, 0.2])).toBe(true);
   });
 });

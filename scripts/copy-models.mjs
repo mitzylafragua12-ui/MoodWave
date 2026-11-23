@@ -8,7 +8,6 @@ const dest = join('public', 'models');
 const wanted = [
   'tiny_face_detector_model', // detección de rostro
   'face_expression_model', // 7 emociones
-  'face_landmark_68_tiny_model', // puntos de los ojos para la prueba de parpadeo (rápido)
   'face_landmark_68_model', // alineación para el descriptor facial
   'face_recognition_model', // descriptor de 128 números (inicio de sesión con rostro)
 ];

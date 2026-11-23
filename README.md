@@ -83,13 +83,12 @@ Sin variables de entorno, el despliegue funciona en modo demo (útil para presen
 Retomado del prototipo anterior del equipo (es lo que se conservó de él) y adaptado a Supabase:
 
 1. **Registro** (Perfil → *Entrar con mi rostro*): con consentimiento explícito se toman 7 capturas y se guarda su promedio: **128 números, nunca una imagen**. Si ese rostro ya pertenece a otra cuenta, se rechaza. Se puede borrar en cualquier momento (y un admin también puede borrarla).
-2. **Prueba de vida**: al pulsar *Identificarme* hay que **parpadear** (abierto → cerrado → abierto, medido con el *Eye Aspect Ratio*). El umbral es relativo al ojo abierto de cada persona (80 % de su máximo), para que funcione con lentes u ojos rasgados. Una foto fija no pasa.
-3. **Identificación 1:N**: se promedian 5 capturas y se comparan con todas las plantillas (distancia euclidiana ≤ 0.45, más estricto que el 0.6 clásico).
+2. **Identificación 1:N**: basta con mirar a la cámara y pulsar *Identificarme* (sin parpadeo, a pedido del equipo). Se promedian 5 capturas y se comparan con todas las plantillas (distancia euclidiana ≤ 0.45, más estricto que el 0.6 clásico).
    - **Modo Supabase**: el navegador envía solo el vector a la Edge Function `face-login`, que compara en la base de datos con `service_role`, aplica un límite de 10 intentos fallidos por IP cada 15 min y devuelve un token de un solo uso para abrir la sesión. **Ningún cliente puede leer plantillas ajenas** (ni la propia): la tabla `face_templates` no expone la columna del vector.
    - **Modo demo**: todo ocurre en el navegador, como en el prototipo.
-4. El navegador recuerda que tiene un rostro registrado y abre directamente la pestaña *Mi rostro*.
+3. El navegador recuerda que tiene un rostro registrado y abre directamente la pestaña *Mi rostro*.
 
-**Límites (decirlos en la presentación):** es un método de **comodidad**, no de alta seguridad. El parpadeo frena una foto, pero no un video de la persona; para control de acceso serio haría falta un reto aleatorio, cámara de profundidad o análisis de textura. Además, la prueba de vida corre en el navegador, así que alguien con conocimientos técnicos que obtenga una foto de la víctima podría calcular el vector y enviarlo directamente; el límite de intentos y el umbral estricto lo dificultan, y la contraseña sigue existiendo como respaldo. La rapidez del parpadeo depende del equipo: con aceleración gráfica va a 20–30 fps; en equipos muy lentos conviene parpadear despacio.
+**Límites (decirlos en la presentación):** es un método de **comodidad**, no de alta seguridad. Como no hay prueba de vida, una **foto o video de la persona** frente a la cámara podría servir para entrar; el umbral estricto (0.45) y el límite de intentos solo lo dificultan. La contraseña sigue existiendo como respaldo. Si más adelante se necesita más seguridad, se puede volver a agregar un reto (parpadeo, girar la cabeza) antes de identificar.
 
 ## Arquitectura
 
@@ -180,7 +179,7 @@ src/
     api/            contrato Api + implementación Supabase y demo
     catalog.ts      emociones, actividades, roles, badges (espejo del SQL)
     gamification.ts niveles, tope diario, rachas (con pruebas)
-    faceDetection.ts carga de modelos, detección, parpadeo y descriptores
+    faceDetection.ts carga de modelos, detección y descriptores faciales
     faceAuth.ts     comparación de rostros y prueba de vida (con pruebas)
   pages/            una página por ruta; activities/ con las 4 actividades
   components/       layout, gráficas, modales
@@ -198,7 +197,7 @@ scripts/copy-models.mjs  copia los modelos de face-api a public/models al instal
 | `npm run dev` | Servidor de desarrollo |
 | `npm run build` | Verifica tipos y genera `dist/` |
 | `npm run preview` | Sirve el build de producción |
-| `npm test` | Pruebas unitarias de gamificación y de comparación de rostros/parpadeo (Vitest) |
+| `npm test` | Pruebas unitarias de gamificación y de comparación de rostros (Vitest) |
 
 Para probar el esquema SQL en un PostgreSQL 15+ local:
 
