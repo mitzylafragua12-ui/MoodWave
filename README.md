@@ -10,7 +10,7 @@ Proyecto de la asignatura *Arquitectura de Software* — Ing. en Desarrollo y Ge
 
 ### Opción recomendada: Docker (en tu computadora)
 
-La app corre en un contenedor (nginx) en tu computadora; la base de datos sigue en Supabase, así que necesitas internet. Requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+La app corre en un contenedor (nginx) en tu computadora, **con HTTPS para la red local**; la base de datos sigue en Supabase, así que necesitas internet. Requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/) abierto.
 
 ```bash
 git clone https://github.com/mitzylafragua12-ui/MoodWave.git
@@ -18,24 +18,77 @@ git clone https://github.com/mitzylafragua12-ui/MoodWave.git
 ```bash
 cd MoodWave
 ```
-```bash
-docker compose up -d --build
+
+Luego arranca con el script de tu sistema. Detecta la IP de tu computadora en la red, la mete en el certificado, construye la imagen y te dice qué direcciones abrir:
+
+- **Windows** (PowerShell):
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File .\start.ps1
+  ```
+- **macOS / Linux**:
+  ```bash
+  ./start.sh
+  ```
+
+Al terminar verás algo así:
+
+```
+En esta computadora:   http://localhost:8080
+En la red local:       https://192.168.1.50:8443
+Certificado raíz:      http://192.168.1.50:8080/moodwave-ca.crt
 ```
 
-Abre **http://localhost:8080**. La primera vez tarda unos minutos (instala dependencias, corre las pruebas y compila dentro del contenedor).
+La primera vez tarda unos minutos: instala dependencias, corre las pruebas y compila dentro del contenedor. La imagen pesa unos 295 MB porque usa nginx sobre Debian, que ya trae `openssl` para crear los certificados.
 
 | Qué quieres hacer | Comando |
 |---|---|
 | Ver si está corriendo | `docker compose ps` (debe decir `healthy`) |
 | Ver los registros | `docker compose logs -f` |
 | Detenerla | `docker compose down` |
-| Actualizar tras `git pull` | `docker compose up -d --build` |
-| Usar otro puerto | `MOODWAVE_PORT=3000 docker compose up -d` (en Windows PowerShell: `$env:MOODWAVE_PORT=3000; docker compose up -d`) |
+| Actualizar tras `git pull` | volver a ejecutar `start.ps1` / `start.sh` |
+| Otros puertos | `MOODWAVE_PORT=3000 MOODWAVE_HTTPS_PORT=3443 ./start.sh` (PowerShell: `$env:MOODWAVE_PORT=3000; $env:MOODWAVE_HTTPS_PORT=3443; .\start.ps1`) |
 
-- **Otro proyecto de Supabase sin recompilar:** define `SUPABASE_URL` y `SUPABASE_ANON_KEY` (en un archivo `.env` junto a `docker-compose.yml` o en la terminal). Al arrancar, el contenedor genera `config.js` con esos valores; si no se definen, usa los de `.env.production`.
-- **Cámara:** funciona en `http://localhost:8080`. Desde otro dispositivo de la red (p. ej. `http://192.168.x.x:8080` en un celular) el navegador **bloquea la cámara** porque exige HTTPS; para eso usa GitHub Pages o pon un proxy con certificado.
-- Si cambias el puerto, agrégalo en Supabase → *Authentication → URL Configuration → Redirect URLs* (ya están `localhost:8080` y `localhost:5173`).
-- Archivos: [`Dockerfile`](Dockerfile) (compila con Node 22 y sirve con nginx, ~90 MB), [`docker-compose.yml`](docker-compose.yml), [`docker/`](docker/) (configuración de nginx, encabezados de seguridad y generación de `config.js`).
+Sin los scripts también funciona `docker compose up -d --build`. En ese caso el certificado cubre `localhost` y la última IP que guardó el script en `.env`.
+
+#### HTTPS en la red local (para usar la cámara desde el celular)
+
+Los navegadores solo abren la cámara en `localhost` o con HTTPS. Para que un celular o una tablet de la misma red Wi-Fi pueda usar *Detectar* y *Entrar con el rostro*, el contenedor sirve también **https://TU-IP:8443** con un certificado propio:
+
+- La primera vez crea una **autoridad certificadora local** («MoodWave Local CA»). Vale 10 años, se guarda en el volumen `moodwave-certs` y no sale de tu computadora.
+- Con ella firma el certificado del servidor para `localhost`, `127.0.0.1` y las IP o nombres de `MOODWAVE_HOSTS`. Si cambia la IP, el script lo detecta y el certificado se vuelve a firmar **con la misma autoridad**, así que no hay que reinstalar nada en los dispositivos.
+
+**Instala el certificado raíz una vez en cada dispositivo.** Descárgalo desde ese dispositivo en `http://TU-IP:8080/moodwave-ca.crt`. Si no lo instalas, el navegador muestra «La conexión no es privada» y la cámara puede no abrir.
+
+| Dispositivo | Cómo instalarlo |
+|---|---|
+| **Android** | Ajustes → Seguridad → Cifrado y credenciales → Instalar un certificado → *Certificado de CA* → elige `MoodWave-CA.crt` (el menú cambia un poco según la marca) |
+| **iPhone / iPad** | Ábrelo en **Safari** → Permitir → Ajustes → *Perfil descargado* → Instalar. Después: Ajustes → General → Información → **Ajustes de confianza de certificados** → activa «MoodWave Local CA» (sin este paso no funciona) |
+| **Windows** | Doble clic en el archivo → Instalar certificado → Equipo local → «Colocar todos los certificados en el siguiente almacén» → **Entidades de certificación raíz de confianza**. Reinicia el navegador. Firefox usa su propio almacén: Ajustes → Privacidad → Ver certificados → Autoridades → Importar |
+| **macOS** | Doble clic → se abre *Acceso a Llaveros* (llavero *Sistema*) → doble clic en «MoodWave Local CA» → Confiar → **Confiar siempre** |
+
+Después abre `https://TU-IP:8443` en el dispositivo.
+
+**Si no abre desde el celular:**
+
+- Los dos deben estar en la misma red Wi-Fi. Las redes de invitados o de escuela a veces aíslan a los dispositivos entre sí.
+- **Firewall de Windows:** la primera vez Windows pregunta si deja pasar a Docker; acepta en *redes privadas*. Si no preguntó, en PowerShell como administrador:
+  ```powershell
+  New-NetFirewallRule -DisplayName "MoodWave" -Direction Inbound -Protocol TCP -LocalPort 8080,8443 -Action Allow -Profile Private
+  ```
+- Si el script eligió una IP equivocada (por ejemplo la de una VPN), indícasela. Queda guardada en `.env`, y admite varias separadas por comas o nombres (`192.168.1.50,mi-pc.local`):
+  ```powershell
+  $env:MOODWAVE_HOSTS="192.168.1.50"; .\start.ps1
+  ```
+  ```bash
+  MOODWAVE_HOSTS=192.168.1.50 ./start.sh
+  ```
+- Supabase ya acepta como dirección de regreso `https://localhost:8443` y `https://<IP privada>:8443` (rangos 192.168, 10 y 172). Si usas otro puerto o un nombre, agrégalo en *Authentication → URL Configuration → Redirect URLs*.
+- Para crear una autoridad nueva (por ejemplo si se filtró la clave), borra el volumen con `docker compose down -v` y vuelve a instalar el certificado en los dispositivos.
+
+**Otras opciones:**
+
+- **Otro proyecto de Supabase sin recompilar:** agrega `SUPABASE_URL` y `SUPABASE_ANON_KEY` a `.env` (los scripts conservan las demás líneas). Al arrancar, el contenedor genera `config.js` con esos valores; si no los defines, usa los de `.env.production`.
+- **Archivos:** [`Dockerfile`](Dockerfile) (compila con Node 22 y sirve con nginx), [`docker-compose.yml`](docker-compose.yml), [`start.sh`](start.sh) / [`start.ps1`](start.ps1) y [`docker/`](docker/), que tiene la configuración de nginx (puertos 80 y 443, HTTP/2), los encabezados de seguridad, la creación de certificados (`30-moodwave-certs.sh`) y la de `config.js`.
 
 MoodWave trabaja **solo con la base de datos real** (Supabase): las cuentas se crean desde la pantalla *Regístrate*. Ya no existe modo demo ni cuentas de ejemplo.
 
@@ -82,7 +135,7 @@ npm run dev
 
 Abre http://localhost:5173. Si faltan las variables, la app muestra una pantalla que explica cómo configurarlas.
 
-> La cámara solo funciona en `localhost` o con HTTPS (requisito del navegador).
+> La cámara solo funciona en `localhost` o con HTTPS (requisito del navegador). Para probar desde el celular usa Docker con HTTPS (arriba).
 
 ---
 

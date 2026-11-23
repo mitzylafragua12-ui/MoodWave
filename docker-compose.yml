@@ -1,5 +1,8 @@
 # MoodWave en local con Docker. La base de datos sigue en Supabase (nube).
-#   docker compose up -d --build     → http://localhost:8080
+#   docker compose up -d --build
+#   → en esta computadora:      http://localhost:8080
+#   → desde la red (HTTPS):     https://TU-IP:8443   (define MOODWAVE_HOSTS con tu IP; ver README)
+# Atajo que detecta tu IP y lo hace todo: ./start.sh (macOS/Linux) o .\start.ps1 (Windows)
 services:
   web:
     build: .
@@ -7,9 +10,17 @@ services:
     container_name: moodwave
     ports:
       - "${MOODWAVE_PORT:-8080}:80"
+      - "${MOODWAVE_HTTPS_PORT:-8443}:443"
     environment:
+      # IPs o nombres con los que se entrará desde otros dispositivos (separados por comas), p. ej. 192.168.1.50
+      MOODWAVE_HOSTS: ${MOODWAVE_HOSTS:-}
       # Opcional: apuntar a otro proyecto de Supabase sin recompilar.
-      # Si se dejan vacías, se usa el proyecto con el que se compiló la imagen (.env.production).
       SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+    volumes:
+      # La autoridad de certificados se conserva entre reinicios (solo se instala una vez en cada dispositivo).
+      - moodwave-certs:/etc/moodwave/certs
     restart: unless-stopped
+
+volumes:
+  moodwave-certs:

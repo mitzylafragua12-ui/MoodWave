@@ -13,13 +13,16 @@ COPY . .
 RUN npm test && npm run build
 
 # ---------- 2) Servidor ----------
-FROM nginx:1.27-alpine
+# Imagen Debian de nginx: ya trae openssl para generar los certificados HTTPS de la red local.
+FROM nginx:1.27
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY docker/security-headers.inc /etc/nginx/moodwave/security-headers.inc
+COPY docker/security-headers.inc docker/app.inc /etc/nginx/moodwave/
+COPY docker/30-moodwave-certs.sh /docker-entrypoint.d/30-moodwave-certs.sh
 COPY docker/40-moodwave-config.sh /docker-entrypoint.d/40-moodwave-config.sh
 COPY --from=build /app/dist /usr/share/nginx/html
-RUN chmod +x /docker-entrypoint.d/40-moodwave-config.sh \
+RUN chmod +x /docker-entrypoint.d/30-moodwave-certs.sh /docker-entrypoint.d/40-moodwave-config.sh \
  && chown nginx:nginx /usr/share/nginx/html /usr/share/nginx/html/config.js
-EXPOSE 80
+EXPOSE 80 443
+VOLUME /etc/moodwave/certs
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://127.0.0.1/healthz || exit 1
+  CMD curl -fsS http://127.0.0.1/healthz || exit 1
