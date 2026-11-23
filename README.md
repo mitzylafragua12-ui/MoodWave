@@ -6,74 +6,52 @@ Proyecto de la asignatura *Arquitectura de Software* — Ing. en Desarrollo y Ge
 
 ---
 
-## Inicio rápido (modo demo, sin configurar nada)
+## Puesta en marcha
+
+MoodWave trabaja **solo con la base de datos real** (Supabase): las cuentas se crean desde la pantalla *Regístrate*. Ya no existe modo demo ni cuentas de ejemplo.
+
+### 1. Base de datos (una sola vez)
+
+1. Crea un proyecto en [supabase.com](https://supabase.com) (el plan gratuito alcanza).
+2. **SQL Editor → New query**: pega y ejecuta todo [`supabase/schema.sql`](supabase/schema.sql). Crea tablas, catálogos, funciones, triggers y políticas RLS. Se puede volver a ejecutar sin problema.
+3. **Authentication → Sign In / Providers → Email**:
+   - Para el proyecto escolar conviene **desactivar *Confirm email***: el correo gratuito de Supabase solo envía unos pocos mensajes por hora y los registros se quedarían esperando la confirmación. Si lo dejan activo, cada persona debe abrir el enlace de su correo antes de entrar.
+   - (Opcional) Activa **Anonymous sign-ins** para el botón *Continuar como visitante*.
+4. **Authentication → URL Configuration**: en *Site URL* y *Redirect URLs* agrega `https://mitzylafragua12-ui.github.io/MoodWave/` (y `http://localhost:5173` para trabajar en local).
+5. **Inicio de sesión con rostro** — Edge Function `face-login`. Desde el panel: **Edge Functions → Deploy a new function → Via Editor**, nombre `face-login`, pega el contenido de [`supabase/functions/face-login/index.ts`](supabase/functions/face-login/index.ts) y despliega. O con la [CLI](https://supabase.com/docs/guides/cli):
+   ```bash
+   supabase functions deploy face-login --project-ref TU_PROJECT_REF
+   ```
+   `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` se inyectan solas.
+6. Regístrate en la app y conviértete en superadmin desde el SQL Editor (después ya puedes asignar roles desde *Administración*):
+   ```sql
+   update public.users set role_id = 8 where username = 'tu_usuario';
+   ```
+
+### 2. Publicar en GitHub Pages
+
+1. **Project Settings → API** en Supabase: copia la *Project URL* y la clave *anon public* (es pública por diseño; lo que protege los datos son las políticas RLS).
+2. En GitHub: **Settings → Secrets and variables → Actions → pestaña Variables → New repository variable**, crea `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+3. **Settings → Pages → Source: GitHub Actions** (ya hecho).
+4. En cada push a `main` el workflow verifica que existan las variables, corre las pruebas, compila con la base `/MoodWave/` y publica en **https://mitzylafragua12-ui.github.io/MoodWave/**. Para publicar sin cambios de código: **Actions → Publicar en GitHub Pages → Run workflow**.
+
+GitHub Pages no tiene reescrituras de rutas: el workflow copia `index.html` como `404.html` para que se pueda abrir o recargar cualquier página interna.
+
+### 3. Trabajar en local
 
 ```bash
 npm install
 ```
 
+Copia `.env.example` a `.env.local`, llena las mismas dos variables y ejecuta:
+
 ```bash
 npm run dev
 ```
 
-Abre http://localhost:5173. Si no hay credenciales de Supabase, la app arranca en **modo demo**: los datos se guardan en el navegador (localStorage) y vienen precargadas cuentas de ejemplo para cada rol (contraseña `moodwave123`):
-
-| Cuenta | Rol |
-|---|---|
-| demo@moodwave.app | Usuario (2 semanas de historial; compartió su historial con @orientador) |
-| editor@moodwave.app | Editor de contenido |
-| orientador@moodwave.app | Orientador |
-| analista@moodwave.app | Analista (reportes + analítica) |
-| admin@moodwave.app | Administrador |
-| superadmin@moodwave.app | Superadmin |
-
-En la pantalla de login hay botones para entrar con cada una. El modo demo replica exactamente las mismas reglas de negocio que la base de datos real.
+Abre http://localhost:5173. Si faltan las variables, la app muestra una pantalla que explica cómo configurarlas.
 
 > La cámara solo funciona en `localhost` o con HTTPS (requisito del navegador).
-
----
-
-## Conectar Supabase (producción)
-
-1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. **SQL Editor → New query**: pega y ejecuta todo [`supabase/schema.sql`](supabase/schema.sql). Crea tablas, catálogos, funciones, triggers y políticas RLS. Puedes ejecutarlo de nuevo sin problema (es idempotente).
-3. **Project Settings → API**: copia la URL y la `anon public key` a un archivo `.env.local`:
-   ```
-   VITE_SUPABASE_URL=https://xxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJ...
-   ```
-4. (Opcional) **Authentication → Sign In / Providers**: activa *Anonymous sign-ins* para el botón "Continuar como invitado". Si quieres registro sin confirmar correo, desactiva *Confirm email*.
-5. **Authentication → URL Configuration**: agrega tu dominio de Vercel en *Site URL* y *Redirect URLs*.
-6. **Inicio de sesión con rostro**: despliega la Edge Function (requiere la [CLI de Supabase](https://supabase.com/docs/guides/cli)):
-   ```bash
-   supabase login
-   ```
-   ```bash
-   supabase functions deploy face-login --project-ref TU_PROJECT_REF
-   ```
-   `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` se inyectan solas; no hay que configurar secretos.
-7. Regístrate en la app y conviértete en superadmin desde el SQL Editor:
-   ```sql
-   update public.users set role_id = 8 where username = 'tu_usuario';
-   ```
-
-## Publicar en GitHub Pages
-
-El repositorio ya trae el workflow `.github/workflows/deploy-pages.yml`: en cada push a `main` corre las pruebas, compila con la base `/MoodWave/` y publica en **https://mitzylafragua12-ui.github.io/MoodWave/**.
-
-Solo hay que activarlo una vez: **Settings → Pages → Build and deployment → Source: GitHub Actions**. El avance se ve en la pestaña **Actions**.
-
-- Sin configurar nada se publica en **modo demo**.
-- Para usar Supabase, agrega `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en **Settings → Secrets and variables → Actions → Variables** y vuelve a ejecutar el workflow. Agrega también `https://mitzylafragua12-ui.github.io/MoodWave/` en las *Redirect URLs* de Supabase Auth.
-- GitHub Pages no tiene reescrituras de rutas: el workflow copia `index.html` como `404.html` para que funcione abrir o recargar cualquier página interna.
-
-## Desplegar en Vercel
-
-1. Sube el repositorio a GitHub e impórtalo en Vercel (framework: **Vite**, se detecta solo).
-2. En *Settings → Environment Variables* agrega `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
-3. Cada push a `main` despliega automáticamente. `vercel.json` ya incluye las reescrituras para las rutas de la SPA.
-
-Sin variables de entorno, el despliegue funciona en modo demo (útil para presentar).
 
 ---
 
@@ -84,7 +62,6 @@ Retomado del prototipo anterior del equipo (es lo que se conservó de él) y ada
 1. **Registro** (Perfil → *Entrar con mi rostro*): con consentimiento explícito se toman 7 capturas y se guarda su promedio: **128 números, nunca una imagen**. Si ese rostro ya pertenece a otra cuenta, se rechaza. Se puede borrar en cualquier momento (y un admin también puede borrarla).
 2. **Identificación 1:N**: basta con mirar a la cámara y pulsar *Identificarme* (sin parpadeo, a pedido del equipo). Se promedian 5 capturas y se comparan con todas las plantillas (distancia euclidiana ≤ 0.45, más estricto que el 0.6 clásico).
    - **Modo Supabase**: el navegador envía solo el vector a la Edge Function `face-login`, que compara en la base de datos con `service_role`, aplica un límite de 10 intentos fallidos por IP cada 15 min y devuelve un token de un solo uso para abrir la sesión. **Ningún cliente puede leer plantillas ajenas** (ni la propia): la tabla `face_templates` no expone la columna del vector.
-   - **Modo demo**: todo ocurre en el navegador, como en el prototipo.
 3. El navegador recuerda que tiene un rostro registrado y abre directamente la pestaña *Mi rostro*.
 
 **Límites (decirlos en la presentación):** es un método de **comodidad**, no de alta seguridad. Como no hay prueba de vida, una **foto o video de la persona** frente a la cámara podría servir para entrar; el umbral estricto (0.45) y el límite de intentos solo lo dificultan. La contraseña sigue existiendo como respaldo. Si más adelante se necesita más seguridad, se puede volver a agregar un reto (parpadeo, girar la cabeza) antes de identificar.
@@ -93,7 +70,7 @@ Retomado del prototipo anterior del equipo (es lo que se conservó de él) y ada
 
 ```
 ┌──────────────────────── Navegador (React + Vite, PWA) ────────────────────────┐
-│  Páginas / componentes  →  lib/api (contrato Api)  →  supabaseApi | demoApi   │
+│  Páginas / componentes  →  lib/api (contrato Api)  →  supabaseApi            │
 │  face-api.js (TinyFaceDetector + FaceExpressionNet) — los fotogramas nunca     │
 │  salen del dispositivo; solo se envía la emoción y las probabilidades          │
 └───────────────────────────────────────┬───────────────────────────────────────┘
@@ -207,7 +184,7 @@ Si el minijuego se elige sin detección, se muestra un selector con los 7. Cada 
 ```
 src/
   lib/
-    api/            contrato Api + implementación Supabase y demo
+    api/            contrato Api + implementación con Supabase
     catalog.ts      emociones, actividades, roles, badges (espejo del SQL)
     gamification.ts niveles, tope diario, rachas (con pruebas)
     faceDetection.ts carga de modelos, detección y descriptores faciales

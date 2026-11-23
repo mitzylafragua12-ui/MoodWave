@@ -23,6 +23,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Verificar credenciales de Supabase
+        run: |
+          if [ -z "${{ vars.VITE_SUPABASE_URL }}" ] || [ -z "${{ vars.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "::error::Faltan VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY en Settings → Secrets and variables → Actions → Variables"
+            exit 1
+          fi
       - run: npm ci
       - run: npm test
       - name: Compilar
@@ -30,8 +36,8 @@ jobs:
         env:
           # La app se sirve en https://<usuario>.github.io/<repositorio>/
           VITE_BASE: /${{ github.event.repository.name }}/
-          # Opcional: credenciales de Supabase como "Repository variables" (Settings → Secrets and variables → Actions → Variables).
-          # Sin ellas se publica en modo demo.
+          # Credenciales de Supabase como "Repository variables" (Settings → Secrets and variables → Actions → Variables).
+          # La anon key es pública por diseño (la seguridad la dan las políticas RLS).
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - name: Rutas de la SPA (GitHub Pages no tiene reescrituras)

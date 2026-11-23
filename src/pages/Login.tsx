@@ -2,16 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { asset } from '../lib/paths';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { DEMO_PASSWORD } from '../lib/api/demoApi';
 import { ErrorBox } from '../components/ui';
 import { FaceLoginPanel, isFaceDevice } from '../components/FaceLoginPanel';
 import { preloadFaceApi } from '../lib/faceDetection';
 import { errMsg } from '../context/ToastContext';
-
-const DEMO_ACCOUNTS = [
-  ['demo', 'Usuario'], ['editor', 'Editor de contenido'], ['orientador', 'Orientador'],
-  ['analista', 'Analista'], ['admin', 'Admin'], ['superadmin', 'Superadmin'],
-] as const;
 
 export function AuthHero() {
   return (
@@ -88,20 +82,6 @@ export default function Login() {
           <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>Continuar como visitante</button>
         </div>
 
-        {api.mode === 'demo' && (
-          <div className="card mt">
-            <div className="spread" style={{ marginBottom: 8 }}>
-              <strong>Modo demo</strong><span className="mode-pill">Sin servidor</span>
-            </div>
-            <p className="small muted">Los datos se guardan en este navegador. Entra con una cuenta de ejemplo para probar cada rol (contraseña <code>{DEMO_PASSWORD}</code>):</p>
-            <div className="demo-chips">
-              {DEMO_ACCOUNTS.map(([user, label]) => (
-                <button key={user} className="btn btn-ghost btn-sm" disabled={busy}
-                  onClick={() => run(() => api.signIn(`${user}@moodwave.app`, DEMO_PASSWORD))}>{label}</button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

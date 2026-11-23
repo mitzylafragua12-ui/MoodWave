@@ -6,7 +6,6 @@ import type {
 
 /** Contrato común de los dos backends: Supabase (producción) y Demo (localStorage). */
 export interface Api {
-  mode: 'supabase' | 'demo';
 
   // Autenticación
   getUserId(): Promise<string | null>;

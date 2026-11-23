@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { asset } from '../lib/paths';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth, useProfile } from '../context/AuthContext';
-import { api } from '../lib/api';
 import { can, isStaff, ROLE_BY_KEY, type Perm } from '../lib/catalog';
 import { RoleChip } from './ui';
 import { preloadFaceApi } from '../lib/faceDetection';
@@ -63,7 +62,6 @@ export function Layout() {
               <div style={{ fontWeight: 700 }}>@{profile.username}</div>
               <RoleChip role={profile.role} />
             </div>
-            {api.mode === 'demo' && <span className="mode-pill" title="Datos guardados solo en este navegador">Demo</span>}
           </div>
           <button className="btn btn-ghost btn-sm" onClick={signOut}>Cerrar sesión</button>
         </div>

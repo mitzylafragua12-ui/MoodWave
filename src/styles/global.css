@@ -193,7 +193,6 @@ tr:last-child td { border-bottom: 0; }
 .tagline { color: var(--muted); margin-top: 4px; }
 .divider { display: flex; align-items: center; gap: 12px; color: var(--faint); font-size: .8rem; margin: 18px 0; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.demo-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 
 /* ---------- detección ---------- */
 .camera-frame { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius); overflow: hidden; background: #000; border: 2px dashed var(--frame, var(--purple)); }
@@ -270,7 +269,6 @@ tr:last-child td { border-bottom: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .journal-entry { border-left: 3px solid var(--c, var(--purple)); padding: 4px 0 4px 14px; }
 .journal-entry .content { white-space: pre-wrap; }
-.mode-pill { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: rgb(234 179 8 / .12); color: var(--yellow); border: 1px solid rgb(234 179 8 / .35); }
 .rank-num { font-family: var(--font-display); font-weight: 800; width: 32px; text-align: center; color: var(--muted); }
 .rank-1 { color: var(--yellow); } .rank-2 { color: #cbd5e1; } .rank-3 { color: #f59e0b; }
 .hbar-row { display: grid; grid-template-columns: 110px 1fr 46px; gap: 10px; align-items: center; margin-bottom: 8px; font-size: .88rem; }

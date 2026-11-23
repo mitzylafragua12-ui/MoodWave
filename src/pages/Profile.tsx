@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { api } from '../lib/api';
-import { resetDemoData } from '../lib/api/demoApi';
 import { useAsync } from '../lib/useAsync';
 import { useAuth, useProfile } from '../context/AuthContext';
 import { errMsg, useToast } from '../context/ToastContext';
@@ -13,7 +12,7 @@ import { ErrorBox, PageHead, ProgressBar, RoleChip, Spinner } from '../component
 
 export default function Profile() {
   const profile = useProfile();
-  const { refresh, signOut } = useAuth();
+  const { refresh } = useAuth();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile.username);
@@ -128,16 +127,6 @@ export default function Profile() {
               </div>
             ))}
           </div>
-          {api.mode === 'demo' && (
-            <div className="card">
-              <h3>Modo demo</h3>
-              <p className="small muted">Restablece los datos de ejemplo de este navegador.</p>
-              <button className="btn btn-danger btn-sm" onClick={async () => {
-                if (!confirm('¿Borrar todos los datos del modo demo en este navegador?')) return;
-                resetDemoData(); await signOut(); location.href = import.meta.env.BASE_URL + 'login';
-              }}>Restablecer datos demo</button>
-            </div>
-          )}
         </div>
       </div>
     </div>

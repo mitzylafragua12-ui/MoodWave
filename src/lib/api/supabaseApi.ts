@@ -26,7 +26,6 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
   };
 
   return {
-    mode: 'supabase',
 
     async getUserId() {
       const { data } = await sb.auth.getSession();
