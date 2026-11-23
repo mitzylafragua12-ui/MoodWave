@@ -1,0 +1,14 @@
+node_modules
+dist
+dev-dist
+.git
+.github
+public/models
+*.local
+.env
+.env.local
+supabase/tests
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md

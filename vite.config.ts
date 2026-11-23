@@ -32,7 +32,7 @@ export default defineConfig({
         // Los modelos de face-api pesan ~0.5 MB; se cachean para uso offline.
         globPatterns: ['**/*.{js,css,html,svg,png,json,bin}'],
         // El modelo de reconocimiento (6 MB) solo se usa al entrar con rostro: se cachea al primer uso.
-        globIgnores: ['**/face_recognition_model*'],
+        globIgnores: ['**/face_recognition_model*', '**/config.js'], // config.js cambia por despliegue: siempre de la red
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [{
           urlPattern: ({ url }) => url.pathname.includes('/models/'),

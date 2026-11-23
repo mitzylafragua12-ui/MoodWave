@@ -19,6 +19,8 @@
         var l = localStorage.getItem('mw-lang'); if (l) document.documentElement.lang = l;
       } catch (e) {}
     </script>
+    <!-- Configuración en tiempo de ejecución (Docker la reescribe al arrancar; ver docker/40-moodwave-config.sh) -->
+    <script src="%BASE_URL%config.js"></script>
     <title>MoodWave</title>
   </head>
   <body>

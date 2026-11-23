@@ -8,6 +8,35 @@ Proyecto de la asignatura *Arquitectura de Software* — Ing. en Desarrollo y Ge
 
 ## Puesta en marcha
 
+### Opción recomendada: Docker (en tu computadora)
+
+La app corre en un contenedor (nginx) en tu computadora; la base de datos sigue en Supabase, así que necesitas internet. Requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+git clone https://github.com/mitzylafragua12-ui/MoodWave.git
+```
+```bash
+cd MoodWave
+```
+```bash
+docker compose up -d --build
+```
+
+Abre **http://localhost:8080**. La primera vez tarda unos minutos (instala dependencias, corre las pruebas y compila dentro del contenedor).
+
+| Qué quieres hacer | Comando |
+|---|---|
+| Ver si está corriendo | `docker compose ps` (debe decir `healthy`) |
+| Ver los registros | `docker compose logs -f` |
+| Detenerla | `docker compose down` |
+| Actualizar tras `git pull` | `docker compose up -d --build` |
+| Usar otro puerto | `MOODWAVE_PORT=3000 docker compose up -d` (en Windows PowerShell: `$env:MOODWAVE_PORT=3000; docker compose up -d`) |
+
+- **Otro proyecto de Supabase sin recompilar:** define `SUPABASE_URL` y `SUPABASE_ANON_KEY` (en un archivo `.env` junto a `docker-compose.yml` o en la terminal). Al arrancar, el contenedor genera `config.js` con esos valores; si no se definen, usa los de `.env.production`.
+- **Cámara:** funciona en `http://localhost:8080`. Desde otro dispositivo de la red (p. ej. `http://192.168.x.x:8080` en un celular) el navegador **bloquea la cámara** porque exige HTTPS; para eso usa GitHub Pages o pon un proxy con certificado.
+- Si cambias el puerto, agrégalo en Supabase → *Authentication → URL Configuration → Redirect URLs* (ya están `localhost:8080` y `localhost:5173`).
+- Archivos: [`Dockerfile`](Dockerfile) (compila con Node 22 y sirve con nginx, ~90 MB), [`docker-compose.yml`](docker-compose.yml), [`docker/`](docker/) (configuración de nginx, encabezados de seguridad y generación de `config.js`).
+
 MoodWave trabaja **solo con la base de datos real** (Supabase): las cuentas se crean desde la pantalla *Regístrate*. Ya no existe modo demo ni cuentas de ejemplo.
 
 > **Estado actual:** ya está conectado al proyecto Supabase `mujauhrhgeuzbdxyqiju` (región us-east-2): esquema instalado, *Confirm email* desactivado, visitantes habilitados, URLs de GitHub Pages autorizadas y la función `face-login` desplegada. La URL y la clave pública están en `.env.production`. Los pasos de abajo sirven para reinstalar o para montarlo en otro proyecto.
@@ -30,7 +59,7 @@ MoodWave trabaja **solo con la base de datos real** (Supabase): las cuentas se c
    update public.users set role_id = 8 where username = 'tu_usuario';
    ```
 
-### 2. Publicar en GitHub Pages
+### 2. Publicar en GitHub Pages (sigue activo además de Docker)
 
 1. La URL y la clave *anon public* del proyecto (**Project Settings → API**) van en [`.env.production`](.env.production). La clave anon es pública por diseño (viaja en el navegador); lo que protege los datos son las políticas RLS. **Nunca** pongas ahí la clave *service_role*.
 2. **Settings → Pages → Source: GitHub Actions** (ya hecho).
