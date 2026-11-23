@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
 import { asset } from '../lib/paths';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -16,6 +16,26 @@ export function AuthHero() {
       {/* Dos versiones del logo: transparente para el tema oscuro y en tarjeta para el claro (solo se descarga la del tema activo). */}
       <div className="auth-logo" role="img" aria-label="MoodWave — Ride your emotions. Scan your mood · Find your flow"
         style={{ '--logo-dark': `url(${asset('logo-alpha.webp')})`, '--logo-light': `url(${asset('logo.webp')})` } as CSSProperties} />
+    </div>
+  );
+}
+
+/** Pantallas de entrada: idioma y tema arriba; en computadora, logo a la izquierda y formulario a la derecha. */
+export function AuthLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="auth-wrap">
+      <div className="auth-top"><AuthPrefs /></div>
+      <div className="auth-split">
+        <aside className="auth-side">
+          <AuthHero />
+          <ul className="auth-features">
+            <li><span aria-hidden>📷</span>{t('Detecta cómo te sientes con la cámara, sin enviar imágenes')}</li>
+            <li><span aria-hidden>🎮</span>{t('Actividades y 28 juegos pensados para cada emoción')}</li>
+            <li><span aria-hidden>🏆</span>{t('Gana XP, sube de nivel y desbloquea logros')}</li>
+          </ul>
+        </aside>
+        <main className="auth-main">{children}</main>
+      </div>
     </div>
   );
 }
@@ -50,44 +70,36 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        <AuthHero />
-        <div className="card">
-          <h2>{t('Bienvenido de vuelta')}</h2>
-          <p className="muted small">{t('Elige cómo prefieres identificarte')}</p>
-          <div className="seg" role="tablist" aria-label={t('Método de inicio de sesión')}>
-            <button type="button" role="tab" aria-selected={tab === 'face'} onClick={() => { setTab('face'); setError(null); }}>{t('🙂 Mi rostro')}</button>
-            <button type="button" role="tab" aria-selected={tab === 'password'} onClick={() => setTab('password')}>{t('🔑 Contraseña')}</button>
-          </div>
-          {tab === 'face' ? (
-            <FaceLoginPanel onSuccess={() => nav(from, { replace: true })} />
-          ) : (
-          <form onSubmit={submit} noValidate>
-          <div className="field">
-            <label htmlFor="email">{t('Correo electrónico')}</label>
-            <input id="email" className="input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('tu@correo.com')} />
-          </div>
-          <div className="field">
-            <label htmlFor="pw">{t('Contraseña')}</label>
-            <input id="pw" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-          </div>
-          <div className="spread small" style={{ marginBottom: 14 }}>
-            <span />
-            <button type="button" className="icon-btn small" style={{ fontSize: '.85rem', color: 'var(--cyan)' }} onClick={forgot}>{t('¿Olvidaste tu contraseña?')}</button>
-          </div>
-          <ErrorBox error={error} />
-          {info && <div className="notice">{info}</div>}
-          <button className="btn btn-cyan btn-block mt" disabled={busy}>{busy ? t('Entrando…') : t('Iniciar sesión')}</button>
-          </form>
-          )}
-          <p className="center small mt mb0 muted">{t('¿No tienes cuenta?')} <Link to="/registro">{t('Regístrate')}</Link></p>
-          <div className="divider">o</div>
-          <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>{t('Continuar como visitante')}</button>
+    <AuthLayout>
+      <div className="card auth-form">
+        <h2 className="mb0">{t('Bienvenido de vuelta')}</h2>
+        <p className="muted small">{t('Elige cómo prefieres identificarte')}</p>
+        <div className="seg" role="tablist" aria-label={t('Método de inicio de sesión')}>
+          <button type="button" role="tab" aria-selected={tab === 'face'} onClick={() => { setTab('face'); setError(null); }}>{t('🙂 Mi rostro')}</button>
+          <button type="button" role="tab" aria-selected={tab === 'password'} onClick={() => setTab('password')}>{t('🔑 Contraseña')}</button>
         </div>
-
-        <AuthPrefs />
+        {tab === 'face' ? (
+          <FaceLoginPanel onSuccess={() => nav(from, { replace: true })} />
+        ) : (
+          <form onSubmit={submit} noValidate>
+            <div className="field">
+              <label htmlFor="email">{t('Correo electrónico')}</label>
+              <input id="email" className="input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('tu@correo.com')} />
+            </div>
+            <div className="field">
+              <label htmlFor="pw">{t('Contraseña')}</label>
+              <input id="pw" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <button type="button" className="link-btn" onClick={forgot}>{t('¿Olvidaste tu contraseña?')}</button>
+            </div>
+            <ErrorBox error={error} />
+            {info && <div className="notice">{info}</div>}
+            <button className="btn btn-cyan btn-block" disabled={busy}>{busy ? t('Entrando…') : t('Iniciar sesión')}</button>
+          </form>
+        )}
+        <div className="divider">{t('o')}</div>
+        <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>{t('Continuar como visitante')}</button>
+        <p className="auth-switch">{t('¿No tienes cuenta?')} <Link to="/registro">{t('Regístrate')}</Link></p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

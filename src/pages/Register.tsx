@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { ErrorBox } from '../components/ui';
 import { errMsg } from '../context/ToastContext';
-import { AuthHero } from './Login';
-import { AuthPrefs } from '../components/SettingsCard';
+import { AuthLayout } from './Login';
 import { t } from '../i18n';
 
 export default function Register() {
@@ -31,9 +30,7 @@ export default function Register() {
   }
 
   return (
-    <div className="auth-wrap">
-      <div className="auth-card">
-        <AuthHero />
+    <AuthLayout>
         {done ? (
           <div className="card center">
             <h2>{t('Revisa tu correo')}</h2>
@@ -41,8 +38,8 @@ export default function Register() {
             <Link to="/login" className="btn btn-primary">{t('Ir a iniciar sesión')}</Link>
           </div>
         ) : (
-          <form className="card" onSubmit={submit} noValidate>
-            <h2>{t('Crea tu cuenta')}</h2>
+          <form className="card auth-form" onSubmit={submit} noValidate>
+            <h2 className="mb0">{t('Crea tu cuenta')}</h2>
             <p className="muted small">{t('Empieza a cuidar tu bienestar emocional')}</p>
             <div className="field">
               <label htmlFor="user">{t('Nombre de usuario')}</label>
@@ -61,13 +58,11 @@ export default function Register() {
               <input id="pw2" className="input" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </div>
             <ErrorBox error={error} />
-            <button className="btn btn-cyan btn-block mt" disabled={busy}>{busy ? t('Creando cuenta…') : t('Registrarme')}</button>
-            <p className="small faint mt">{t('Tu rostro se procesa solo en tu dispositivo: MoodWave nunca guarda ni envía imágenes de tu cámara.')}</p>
-            <p className="center small mb0 muted">{t('¿Ya tienes cuenta?')} <Link to="/login">{t('Inicia sesión')}</Link></p>
+            <button className="btn btn-cyan btn-block" disabled={busy}>{busy ? t('Creando cuenta…') : t('Registrarme')}</button>
+            <p className="small faint mt mb0">{t('Tu rostro se procesa solo en tu dispositivo: MoodWave nunca guarda ni envía imágenes de tu cámara.')}</p>
+            <p className="auth-switch">{t('¿Ya tienes cuenta?')} <Link to="/login">{t('Inicia sesión')}</Link></p>
           </form>
         )}
-        <AuthPrefs />
-      </div>
-    </div>
+    </AuthLayout>
   );
 }
