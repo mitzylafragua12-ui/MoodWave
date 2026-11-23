@@ -31,8 +31,8 @@ export default function Mentorship() {
 
   return (
     <div className="page">
-      <PageHead eyebrow="Mi mentoría" title="Acompañamiento" color="var(--purple-soft)"
-        subtitle="Solicita una sesión con un mentor y decide si puede ver cómo te has sentido." />
+      <PageHead eyebrow="Mi orientación" title="Acompañamiento" color="var(--purple-soft)"
+        subtitle="Solicita una sesión con un orientador y decide si puede ver cómo te has sentido." />
       <ErrorBox error={mine.error || sessions.error} />
       <div className="notice small" style={{ marginBottom: 16 }}>
         MoodWave no sustituye la atención profesional. Si estás en crisis, llama a la Línea de la Vida: <strong>800 911 2000</strong> (México, 24 h).
@@ -43,10 +43,10 @@ export default function Mentorship() {
             <h2>🔒 Privacidad</h2>
             {!m ? <Spinner /> : (
               <>
-                <p className="small muted">{m.mentor_username ? <>Tu mentor es <strong>@{m.mentor_username}</strong>.</> : 'Aún no tienes mentor asignado.'} ¿Quieres que pueda ver tus emociones, actividades y progreso?</p>
+                <p className="small muted">{m.mentor_username ? <>Tu orientador es <strong>@{m.mentor_username}</strong>.</> : 'Aún no tienes orientador asignado.'} ¿Quieres que pueda ver tus emociones, actividades y progreso?</p>
                 <div className={m.consent ? 'notice' : 'warn'}>
                   {m.consent
-                    ? <>Ahora mismo <strong>sí</strong>: {m.mentor_username ? `@${m.mentor_username} puede` : 'tu mentor podrá'} ver tu historial emocional.</>
+                    ? <>Ahora mismo <strong>sí</strong>: {m.mentor_username ? `@${m.mentor_username} puede` : 'tu orientador podrá'} ver tu historial emocional.</>
                     : <>Ahora mismo <strong>no</strong>: nadie más que tú ve tus emociones.</>}
                   <div className="small" style={{ marginTop: 6 }}>Tu diario nunca se comparte, decidas lo que decidas aquí.</div>
                 </div>
@@ -74,7 +74,7 @@ export default function Mentorship() {
             <div key={s.id} className="card tight mt" style={{ background: 'var(--surface-2)' }}>
               <div className="spread"><StatusChip s={s} /><span className="small faint">{fmtDateTime(s.created_at)}</span></div>
               <p className="mt mb0">{s.topic}</p>
-              {s.mentor_username && <p className="small muted mb0">Mentor: @{s.mentor_username}</p>}
+              {s.mentor_username && <p className="small muted mb0">Orientador: @{s.mentor_username}</p>}
               {s.feedback && <div className="notice small mt"><strong>Retroalimentación:</strong> {s.feedback}</div>}
               <div className="row mt">
                 {s.status === 'requested' && <button className="btn btn-ghost btn-sm" onClick={() => act(() => api.cancelMentorSession(s.id), 'Solicitud cancelada')}>Cancelar</button>}

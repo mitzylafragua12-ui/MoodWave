@@ -50,7 +50,7 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
     },
     async signInGuest() {
       const { error } = await sb.auth.signInAnonymously();
-      if (error) throw new Error('El acceso de invitado no está habilitado en Supabase (Auth → Anonymous sign-ins).');
+      if (error) throw new Error('El acceso de visitante no está habilitado en Supabase (Auth → Anonymous sign-ins).');
     },
     async signOut() { await sb.auth.signOut(); },
     async resetPassword(email) {

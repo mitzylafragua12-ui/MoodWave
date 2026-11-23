@@ -28,7 +28,7 @@ export default function Mentees() {
 
   return (
     <div className="page">
-      <PageHead eyebrow="Mentor" title="Mis acompañados" color="var(--purple-soft)"
+      <PageHead eyebrow="Orientador" title="Mis acompañados" color="var(--purple-soft)"
         subtitle="Ves el historial emocional de una persona solo si ella te dio permiso. Los diarios nunca se comparten." />
       <ErrorBox error={mentees.error || sessions.error} />
       <section className="card">

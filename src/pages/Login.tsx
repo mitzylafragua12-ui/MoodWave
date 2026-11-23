@@ -8,7 +8,7 @@ import { FaceLoginPanel, isFaceDevice } from '../components/FaceLoginPanel';
 import { errMsg } from '../context/ToastContext';
 
 const DEMO_ACCOUNTS = [
-  ['demo', 'Listener'], ['curador', 'Curador'], ['moderador', 'Moderador'], ['mentor', 'Mentor'],
+  ['demo', 'Usuario'], ['editor', 'Editor de contenido'], ['revisor', 'Revisor de reportes'], ['orientador', 'Orientador'],
   ['analista', 'Analista'], ['admin', 'Admin'], ['superadmin', 'Superadmin'],
 ] as const;
 
@@ -82,7 +82,7 @@ export default function Login() {
           )}
           <p className="center small mt mb0 muted">¿No tienes cuenta? <Link to="/registro">Regístrate</Link></p>
           <div className="divider">o</div>
-          <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>Continuar como invitado</button>
+          <button type="button" className="btn btn-ghost btn-block" disabled={busy} onClick={() => run(() => api.signInGuest())}>Continuar como visitante</button>
         </div>
 
         {api.mode === 'demo' && (

@@ -25,11 +25,11 @@ create table if not exists public.roles (
 );
 
 insert into public.roles (id, key, name, rank, description) values
-  (1, 'guest',      'Invitado',      0, 'Acceso de prueba con funciones limitadas.'),
-  (2, 'listener',   'Listener',     10, 'Usuario estándar: detecta, realiza actividades y gana XP.'),
-  (3, 'curator',    'Curador',      20, 'Gestiona las playlists recomendadas por emoción.'),
-  (4, 'moderator',  'Moderador',    30, 'Revisa reportes y suspende cuentas.'),
-  (5, 'mentor',     'Mentor',       40, 'Guía sesiones emocionales y da retroalimentación.'),
+  (1, 'guest',      'Visitante',           0, 'Prueba la app sin cuenta; no aparece en el ranking.'),
+  (2, 'listener',   'Usuario',            10, 'Detecta su emoción, hace actividades y gana XP.'),
+  (3, 'curator',    'Editor de contenido', 20, 'Elige la música que se recomienda para cada emoción.'),
+  (4, 'moderator',  'Revisor de reportes', 30, 'Revisa los reportes de los usuarios y puede suspender cuentas.'),
+  (5, 'mentor',     'Orientador',         40, 'Acompaña a sus personas asignadas; ve su historial solo con su permiso.'),
   (6, 'analyst',    'Analista',     50, 'Consulta el dashboard analítico agregado.'),
   (7, 'admin',      'Administrador',60, 'Gestiona usuarios, roles y badges.'),
   (8, 'superadmin', 'Superadmin',   70, 'Control total, incluida la asignación de administradores.')
@@ -794,10 +794,10 @@ language plpgsql security definer set search_path = public as $$
 begin
   if not public.has_perm('manage_users') then raise exception 'Permiso denegado'; end if;
   if p_mentor is null then delete from public.mentorships where mentee_id = p_user; return; end if;
-  if p_mentor = p_user then raise exception 'Nadie puede ser su propio mentor'; end if;
+  if p_mentor = p_user then raise exception 'Nadie puede ser su propio orientador'; end if;
   if not exists (select 1 from public.users u join public.role_permissions rp on rp.role_id = u.role_id
                   where u.id = p_mentor and rp.perm = 'mentor') then
-    raise exception 'Esa persona no tiene rol de mentor';
+    raise exception 'Esa persona no tiene rol de orientador';
   end if;
   insert into public.mentorships (mentee_id, mentor_id) values (p_user, p_mentor)
   on conflict (mentee_id) do update set mentor_id = excluded.mentor_id, assigned_at = now();

@@ -16,7 +16,7 @@ const EMPTY: Omit<Badge, 'id'> & { id?: number } = { key: '', name: '', descript
 
 export default function Admin() {
   const me = useProfile();
-  const tabs = ([['users', 'Usuarios, roles y mentores', 'manage_users'], ['badges', 'Badges', 'manage_badges'], ['roles', 'Qué ve cada rol', null]] as const)
+  const tabs = ([['users', 'Usuarios, roles y orientadores', 'manage_users'], ['badges', 'Badges', 'manage_badges'], ['roles', 'Qué ve cada rol', null]] as const)
     .filter(([, , perm]) => !perm || can(me.role, perm));
   const [tab, setTab] = useState<'users' | 'badges' | 'roles'>(tabs[0][0]);
   return (
@@ -44,7 +44,7 @@ function Users() {
   const assignable = ROLES.filter((r) => isSuper || !isAdminRole(r.key));
   const mentors = data?.filter((u) => can(u.role_key, 'mentor') && !u.suspended) ?? [];
   async function changeMentor(id: string, mentorId: string) {
-    try { await api.setMentor(id, mentorId || null); toast(mentorId ? 'Mentor asignado' : 'Mentor retirado'); reload(); } catch (e) { toast(errMsg(e), 'error'); }
+    try { await api.setMentor(id, mentorId || null); toast(mentorId ? 'Orientador asignado' : 'Orientador retirado'); reload(); } catch (e) { toast(errMsg(e), 'error'); }
   }
 
   async function change(id: string, role: RoleKey) {
@@ -67,7 +67,7 @@ function Users() {
         <input className="input" style={{ maxWidth: 240 }} placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar usuario" />
       </div>
       <div className="table-wrap mt"><table>
-        <thead><tr><th>Usuario</th><th>Rol</th><th>Mentor</th><th>Nivel / XP</th><th>Alta</th><th>Estado</th></tr></thead>
+        <thead><tr><th>Usuario</th><th>Rol</th><th>Orientador</th><th>Nivel / XP</th><th>Alta</th><th>Estado</th></tr></thead>
         <tbody>{data?.filter((u) => u.username.includes(q.toLowerCase()) || u.display_name.toLowerCase().includes(q.toLowerCase())).map((u) => (
           <tr key={u.id}>
             <td>
@@ -86,9 +86,9 @@ function Users() {
               </select>
             </td>
             <td>
-              <select className="input" style={{ padding: '6px 10px', minWidth: 140 }} value={u.mentor_id ?? ''} aria-label={`Mentor de ${u.username}`}
+              <select className="input" style={{ padding: '6px 10px', minWidth: 140 }} value={u.mentor_id ?? ''} aria-label={`Orientador de ${u.username}`}
                 onChange={(e) => changeMentor(u.id, e.target.value)}>
-                <option value="">Sin mentor</option>
+                <option value="">Sin orientador</option>
                 {mentors.filter((m) => m.id !== u.id).map((m) => <option key={m.id} value={m.id}>@{m.username}</option>)}
               </select>
             </td>
@@ -183,8 +183,8 @@ function Badges() {
 }
 
 const PERM_LABEL: Record<Perm, string> = {
-  curate: 'Curaduría', moderate: 'Moderación', mentor: 'Acompañados', analytics: 'Analítica',
-  manage_users: 'Usuarios y mentores', manage_badges: 'Badges', manage_admins: 'Gestionar administradores',
+  curate: 'Contenido', moderate: 'Reportes', mentor: 'Mis acompañados', analytics: 'Analítica',
+  manage_users: 'Usuarios y orientadores', manage_badges: 'Badges', manage_admins: 'Gestionar administradores',
 };
 
 function RolesInfo() {

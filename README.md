@@ -20,10 +20,10 @@ Abre http://localhost:5173. Si no hay credenciales de Supabase, la app arranca e
 
 | Cuenta | Rol |
 |---|---|
-| demo@moodwave.app | Listener (usuario con 2 semanas de historial; compartió su historial con @mentor) |
-| curador@moodwave.app | Curador |
-| moderador@moodwave.app | Moderador |
-| mentor@moodwave.app | Mentor |
+| demo@moodwave.app | Usuario (2 semanas de historial; compartió su historial con @orientador) |
+| editor@moodwave.app | Editor de contenido |
+| revisor@moodwave.app | Revisor de reportes |
+| orientador@moodwave.app | Orientador |
 | analista@moodwave.app | Analista |
 | admin@moodwave.app | Administrador |
 | superadmin@moodwave.app | Superadmin |
@@ -128,26 +128,26 @@ El cliente **no puede escribir XP**: `xp_ledger` no tiene política de inserció
 
 ### Roles: cada uno ve lo suyo
 
-Los roles **ya no son jerárquicos**: cada rol entra a su **propio panel** con solo sus herramientas de trabajo, y **todos** pueden usar además la parte de bienestar (detectar, actividades, progreso, ranking). Los permisos están en la tabla `role_permissions` y en `ROLE_PERMS` (`src/lib/catalog.ts`).
+Los nombres visibles son en español; por dentro se conservan las claves en inglés (`guest`, `listener`, `curator`, `moderator`, `mentor`…). Los roles **ya no son jerárquicos**: cada rol entra a su **propio panel** con solo sus herramientas de trabajo, y **todos** pueden usar además la parte de bienestar (detectar, actividades, progreso, ranking). Los permisos están en la tabla `role_permissions` y en `ROLE_PERMS` (`src/lib/catalog.ts`).
 
-| Rol | Al entrar ve | Herramientas de trabajo |
+| Rol (clave interna) | Al entrar ve | Herramientas de trabajo |
 |---|---|---|
-| guest / listener | Su bienestar: nivel, racha, ánimo de la semana | — |
-| curator | Panel de curador: contenido por emoción (actividad, juego, playlist) | Curaduría |
-| moderator | Panel de moderador: reportes por revisar | Moderación |
-| mentor | Panel de mentor: personas asignadas, solicitudes, sesiones | Mis acompañados |
-| analyst | Panel de analista: indicadores de 7 días | Analítica |
-| admin | Panel de administrador: cuentas, usuarios sin mentor, moderación y analítica | Administración, Moderación, Analítica |
-| superadmin | Todos los paneles | Todo, incluido gestionar administradores |
+| Visitante (`guest`) / Usuario (`listener`) | Su bienestar: nivel, racha, ánimo de la semana | — |
+| Editor de contenido (`curator`) | Contenido por emoción (actividad, juego, playlist) | Contenido |
+| Revisor de reportes (`moderator`) | Reportes por revisar | Reportes |
+| Orientador (`mentor`) | Personas asignadas, solicitudes, sesiones | Mis acompañados |
+| Analista (`analyst`) | Indicadores de 7 días | Analítica |
+| Administrador (`admin`) | Cuentas, usuarios sin orientador, reportes y analítica | Administración, Reportes, Analítica |
+| Superadmin (`superadmin`) | Todos los paneles | Todo, incluido gestionar administradores |
 
 El rango solo se usa para proteger a los administradores: suspenderlos o cambiarles el rol requiere superadmin.
 
-### Mentoría con permiso
+### Orientación con permiso
 
-- Cada persona puede tener un mentor: lo asigna el administrador o queda asignado cuando un mentor toma su solicitud de sesión.
-- En **Mi mentoría → Privacidad** la persona decide si su mentor puede ver sus emociones, actividades y progreso. Puede retirarlo cuando quiera y el acceso se corta al instante.
+- Cada persona puede tener un orientador: lo asigna el administrador o queda asignado cuando un orientador toma su solicitud de sesión.
+- En **Mi orientación → Privacidad** la persona decide si su orientador puede ver sus emociones, actividades y progreso. Puede retirarlo cuando quiera y el acceso se corta al instante.
 - Los consentimientos se guardan como historial de solo inserción (`mentor_consents`): queda el rastro de cuándo se dio y cuándo se retiró.
-- El mentor **nunca** ve el diario, ni con permiso.
+- El orientador **nunca** ve el diario, ni con permiso.
 
 ### Flujo automático
 

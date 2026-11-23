@@ -104,7 +104,7 @@ export default function Dashboard() {
             <div className="stack" style={{ gap: 8 }}>
               <Link to="/actividades" className="btn btn-ghost btn-sm">✨ Elegir actividad libre</Link>
               <Link to="/ranking" className="btn btn-ghost btn-sm">🏆 Ver ranking</Link>
-              <Link to="/mentoria" className="btn btn-ghost btn-sm">🤝 Hablar con un mentor</Link>
+              <Link to="/mentoria" className="btn btn-ghost btn-sm">🤝 Hablar con un orientador</Link>
             </div>
           </div>
         </div>

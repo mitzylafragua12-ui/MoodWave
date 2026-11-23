@@ -18,7 +18,7 @@ export default function Leaderboard() {
     if (!reporting) return;
     try {
       await api.createReport({ reported_user_id: reporting.user_id, target_type: 'user', reason });
-      toast('Reporte enviado. Un moderador lo revisará.');
+      toast('Reporte enviado. Un revisor de reportes lo revisará.');
       setReporting(null); setReason('');
     } catch (e) { toast(errMsg(e), 'error'); }
   }
@@ -51,7 +51,7 @@ export default function Leaderboard() {
       {reporting && (
         <Modal left onClose={() => setReporting(null)}>
           <h2>Reportar a @{reporting.username}</h2>
-          <p className="muted small">Cuéntanos por qué. Los moderadores revisarán el caso.</p>
+          <p className="muted small">Cuéntanos por qué. Un revisor de reportes revisará el caso.</p>
           <textarea className="input" style={{ minHeight: 100 }} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo del reporte" />
           <div className="row mt" style={{ justifyContent: 'flex-end' }}>
             <button className="btn btn-ghost" onClick={() => setReporting(null)}>Cancelar</button>

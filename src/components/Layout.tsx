@@ -14,14 +14,14 @@ const WELLNESS: NavItem[] = [
   { to: '/actividades', label: 'Actividades', ico: '✨' },
   { to: '/historial', label: 'Historial', ico: '🗂️' },
   { to: '/ranking', label: 'Ranking', ico: '🏆' },
-  { to: '/mentoria', label: 'Mi mentoría', ico: '🤝' },
+  { to: '/mentoria', label: 'Mi orientación', ico: '🤝' },
   { to: '/perfil', label: 'Perfil', ico: '👤' },
 ];
 // Herramientas de trabajo: cada rol ve solo las suyas.
 const WORK: NavItem[] = [
-  { to: '/curaduria', label: 'Curaduría', ico: '🎵', perm: 'curate' },
+  { to: '/curaduria', label: 'Contenido', ico: '🎵', perm: 'curate' },
   { to: '/acompanados', label: 'Mis acompañados', ico: '🧑‍🤝‍🧑', perm: 'mentor' },
-  { to: '/moderacion', label: 'Moderación', ico: '🛡️', perm: 'moderate' },
+  { to: '/moderacion', label: 'Reportes', ico: '🛡️', perm: 'moderate' },
   { to: '/analitica', label: 'Analítica', ico: '📊', perm: 'analytics' },
   { to: '/admin', label: 'Administración', ico: '⚙️', perm: 'manage_users' },
 ];
@@ -74,12 +74,12 @@ export function Layout() {
         </div>
         {profile.suspended && (
           <div className="page" style={{ paddingBottom: 0 }}>
-            <div className="error">Tu cuenta está suspendida por un moderador. Puedes consultar tu información, pero no registrar nuevas actividades.</div>
+            <div className="error">Tu cuenta está suspendida por un revisor de reportes. Puedes consultar tu información, pero no registrar nuevas actividades.</div>
           </div>
         )}
         {profile.role === 'guest' && (
           <div className="page" style={{ paddingBottom: 0 }}>
-            <div className="notice">Estás usando MoodWave como invitado. <Link to="/registro" onClick={signOut}>Crea una cuenta</Link> para aparecer en el ranking y solicitar mentoría.</div>
+            <div className="notice">Estás usando MoodWave como visitante. <Link to="/registro" onClick={signOut}>Crea una cuenta</Link> para aparecer en el ranking y hablar con un orientador.</div>
           </div>
         )}
         <main id="contenido"><Outlet /></main>

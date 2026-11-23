@@ -77,7 +77,7 @@ function AdminWidget() {
         <>
           <div className="stats-row">
             <Stat value={data.length} label="Cuentas" />
-            <Stat value={listeners.filter((u) => !u.mentor_id).length} label="Usuarios sin mentor" color="var(--yellow)" />
+            <Stat value={listeners.filter((u) => !u.mentor_id).length} label="Usuarios sin orientador" color="var(--yellow)" />
             <Stat value={data.filter((u) => u.suspended).length} label="Suspendidas" color="var(--red)" />
           </div>
           <div className="row mt" style={{ gap: 6 }}>
@@ -127,14 +127,14 @@ function ModeratorWidget() {
   const reports = useAsync(() => api.listReports(), []);
   const open = reports.data?.filter((r) => r.status === 'open') ?? [];
   return (
-    <Widget title="Moderación" icon="🛡️" to="/moderacion" cta="Revisar" color="var(--yellow)">
+    <Widget title="Reportes" icon="🛡️" to="/moderacion" cta="Revisar" color="var(--yellow)">
       <ErrorBox error={reports.error} />
       {!reports.data ? <Spinner /> : open.length === 0 ? <p className="muted mb0">✓ No hay reportes pendientes.</p> : (
         <div className="stack" style={{ gap: 10 }}>
           <p className="mb0"><strong style={{ color: 'var(--yellow)' }}>{open.length}</strong> reporte(s) por revisar</p>
           {open.slice(0, 3).map((r) => (
             <div key={r.id} className="small">
-              <strong>{r.reported_username ? `@${r.reported_username}` : 'Sesión de mentoría'}</strong> <span className="faint">· {fmtDateTime(r.created_at)}</span>
+              <strong>{r.reported_username ? `@${r.reported_username}` : 'Sesión de orientación'}</strong> <span className="faint">· {fmtDateTime(r.created_at)}</span>
               <div className="muted">{r.reason}</div>
             </div>
           ))}
@@ -167,7 +167,7 @@ function AnalystWidget() {
 function CuratorWidget() {
   const { data } = useAsync(() => api.getPlaylists(), []);
   return (
-    <Widget title="Contenido por emoción" icon="🎵" to="/curaduria" cta="Editar playlists" color="var(--green)">
+    <Widget title="Contenido por emoción" icon="🎵" to="/curaduria" cta="Editar música" color="var(--green)">
       <div className="table-wrap"><table>
         <thead><tr><th>Emoción</th><th>Actividad principal</th><th>Juego</th><th>Playlist</th></tr></thead>
         <tbody>{EMOTIONS.map((e) => {

@@ -28,7 +28,7 @@ export default function Curation() {
 
   return (
     <div className="page">
-      <PageHead eyebrow="Curaduría" title="Playlists por emoción" color="var(--green)"
+      <PageHead eyebrow="Editor de contenido" title="Música por emoción" color="var(--green)"
         subtitle="Define qué playlist de Spotify se recomienda para cada estado de ánimo. Pega el enlace de compartir de la playlist." />
       <ErrorBox error={error} />
       {loading ? <Spinner /> : (

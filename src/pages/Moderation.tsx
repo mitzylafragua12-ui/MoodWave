@@ -26,7 +26,7 @@ export default function Moderation() {
 
   return (
     <div className="page">
-      <PageHead eyebrow="Moderación" title="Reportes y cuentas" color="var(--red)" subtitle={`${open} reporte(s) abierto(s)`} />
+      <PageHead eyebrow="Revisor de reportes" title="Reportes y cuentas" color="var(--red)" subtitle={`${open} reporte(s) abierto(s)`} />
       <ErrorBox error={reports.error || users.error} />
       <div className="card">
         <h2>Reportes</h2>
@@ -40,7 +40,7 @@ export default function Moderation() {
                   <td className="small">{fmtDateTime(r.created_at)}</td>
                   <td>{r.reported_username ? `@${r.reported_username}` : '—'}{target?.suspended && <span className="small" style={{ color: 'var(--red)' }}> (suspendido)</span>}</td>
                   <td className="small muted">@{r.reporter_username}</td>
-                  <td className="small">{r.target_type === 'user' ? 'Usuario' : 'Mentoría'}</td>
+                  <td className="small">{r.target_type === 'user' ? 'Usuario' : 'Orientación'}</td>
                   <td className="small" style={{ maxWidth: 260 }}>{r.reason}{r.resolution && <div className="faint">→ {r.resolution}</div>}</td>
                   <td className="small">{r.status === 'open' ? <span style={{ color: 'var(--yellow)' }}>Abierto</span> : r.status === 'resolved' ? 'Resuelto' : 'Descartado'}</td>
                   <td>

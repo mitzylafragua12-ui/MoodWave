@@ -85,13 +85,13 @@ export const JOURNAL_PROMPTS: Record<EmotionKey | 'free', string[]> = {
 
 export interface RoleInfo { id: number; key: RoleKey; name: string; rank: number; description: string }
 export const ROLES: RoleInfo[] = [
-  { id: 1, key: 'guest', name: 'Invitado', rank: 0, description: 'Acceso de prueba con funciones limitadas.' },
-  { id: 2, key: 'listener', name: 'Listener', rank: 10, description: 'Usuario estándar: detecta, realiza actividades y gana XP.' },
-  { id: 3, key: 'curator', name: 'Curador', rank: 20, description: 'Gestiona el contenido: playlists de Spotify por emoción.' },
-  { id: 4, key: 'moderator', name: 'Moderador', rank: 30, description: 'Revisa reportes y suspende cuentas.' },
-  { id: 5, key: 'mentor', name: 'Mentor', rank: 40, description: 'Acompaña a sus personas asignadas; ve su historial solo con su permiso.' },
+  { id: 1, key: 'guest', name: 'Visitante', rank: 0, description: 'Prueba la app sin cuenta; no aparece en el ranking.' },
+  { id: 2, key: 'listener', name: 'Usuario', rank: 10, description: 'Detecta su emoción, hace actividades y gana XP.' },
+  { id: 3, key: 'curator', name: 'Editor de contenido', rank: 20, description: 'Elige la música (playlists de Spotify) que se recomienda para cada emoción.' },
+  { id: 4, key: 'moderator', name: 'Revisor de reportes', rank: 30, description: 'Revisa los reportes de los usuarios y puede suspender cuentas.' },
+  { id: 5, key: 'mentor', name: 'Orientador', rank: 40, description: 'Acompaña a sus personas asignadas; ve su historial solo con su permiso.' },
   { id: 6, key: 'analyst', name: 'Analista', rank: 50, description: 'Consulta el dashboard analítico agregado.' },
-  { id: 7, key: 'admin', name: 'Administrador', rank: 60, description: 'Gestiona usuarios, roles, mentores y badges; ve analítica y moderación.' },
+  { id: 7, key: 'admin', name: 'Administrador', rank: 60, description: 'Gestiona usuarios, roles, orientadores y badges; ve analítica y reportes.' },
   { id: 8, key: 'superadmin', name: 'Superadmin', rank: 70, description: 'Todas las herramientas, incluida la gestión de administradores.' },
 ];
 export const ROLE_BY_KEY = Object.fromEntries(ROLES.map((r) => [r.key, r])) as Record<RoleKey, RoleInfo>;
