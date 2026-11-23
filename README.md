@@ -20,7 +20,7 @@ Abre http://localhost:5173. Si no hay credenciales de Supabase, la app arranca e
 
 | Cuenta | Rol |
 |---|---|
-| demo@moodwave.app | Listener (usuario con 2 semanas de historial) |
+| demo@moodwave.app | Listener (usuario con 2 semanas de historial; compartió su historial con @mentor) |
 | curador@moodwave.app | Curador |
 | moderador@moodwave.app | Moderador |
 | mentor@moodwave.app | Mentor |
@@ -124,20 +124,48 @@ El cliente **no puede escribir XP**: `xp_ledger` no tiene política de inserció
 | Niveles | 10: 0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200 XP |
 | Racha | Días consecutivos con al menos una actividad completada (zona America/Mexico_City) |
 | Logros | 14 predefinidos; el administrador puede crear más desde la app |
-| Duración mínima | Meditación 60 s · Música 60 s · Minijuego 30 s · Diario ≥ 20 caracteres |
+| Duración mínima | Meditación 60 s · Música 60 s · Minijuego 20 s · Diario ≥ 20 caracteres |
 
-### Roles (jerárquicos)
+### Roles: cada uno ve lo suyo
 
-| Rango | Rol | Puede |
+Los roles **ya no son jerárquicos**: cada rol entra a su **propio panel** con solo sus herramientas de trabajo, y **todos** pueden usar además la parte de bienestar (detectar, actividades, progreso, ranking). Los permisos están en la tabla `role_permissions` y en `ROLE_PERMS` (`src/lib/catalog.ts`).
+
+| Rol | Al entrar ve | Herramientas de trabajo |
 |---|---|---|
-| 0 | guest | Probar la app (no aparece en el ranking) |
-| 10 | listener | Detectar, hacer actividades, ganar XP, solicitar mentoría, reportar |
-| 20 | curator | + Editar la playlist de Spotify de cada emoción |
-| 30 | moderator | + Revisar reportes, suspender y reactivar cuentas |
-| 40 | mentor | + Tomar solicitudes de mentoría y dar retroalimentación |
-| 50 | analyst | + Dashboard analítico agregado |
-| 60 | admin | + Gestionar usuarios, roles (hasta mentor/analista) y badges |
-| 70 | superadmin | + Asignar administradores |
+| guest / listener | Su bienestar: nivel, racha, ánimo de la semana | — |
+| curator | Panel de curador: contenido por emoción (actividad, juego, playlist) | Curaduría |
+| moderator | Panel de moderador: reportes por revisar | Moderación |
+| mentor | Panel de mentor: personas asignadas, solicitudes, sesiones | Mis acompañados |
+| analyst | Panel de analista: indicadores de 7 días | Analítica |
+| admin | Panel de administrador: cuentas, usuarios sin mentor, moderación y analítica | Administración, Moderación, Analítica |
+| superadmin | Todos los paneles | Todo, incluido gestionar administradores |
+
+El rango solo se usa para proteger a los administradores: suspenderlos o cambiarles el rol requiere superadmin.
+
+### Mentoría con permiso
+
+- Cada persona puede tener un mentor: lo asigna el administrador o queda asignado cuando un mentor toma su solicitud de sesión.
+- En **Mi mentoría → Privacidad** la persona decide si su mentor puede ver sus emociones, actividades y progreso. Puede retirarlo cuando quiera y el acceso se corta al instante.
+- Los consentimientos se guardan como historial de solo inserción (`mentor_consents`): queda el rastro de cuándo se dio y cuándo se retiró.
+- El mentor **nunca** ve el diario, ni con permiso.
+
+### Flujo automático
+
+Al detectar la emoción, la app muestra una cuenta de 3 segundos (que se puede cancelar) y lleva **directo a la actividad recomendada**, que **arranca sola**: la meditación empieza a contar, el juego hace su cuenta regresiva y el diario abre con el cursor listo. Desde la actividad se puede pulsar *Cambiar actividad*. La música de Spotify es la excepción: los navegadores no permiten reproducir sin un toque.
+
+### Un juego por emoción
+
+| Emoción | Juego | Idea |
+|---|---|---|
+| 😊 Feliz | ⭐ Lluvia de estrellas | Atrapar estrellas con una canasta: aprovechar la energía |
+| 😢 Triste | 🌸 Jardín de luz | Plantar flores con calma, con mensajes amables |
+| 😠 Enojo | 🫧 Burbujas de calma | Reventar burbujas con lo que molesta: soltar tensión |
+| 😨 Miedo | 🗼 Faro en calma | Mantener presionado al inhalar y soltar al exhalar |
+| 🤢 Disgusto | 🧽 Ventana limpia | Limpiar una ventana sucia y descubrir un paisaje |
+| 😮 Sorpresa | 🎁 Memoria sorpresa | Encontrar parejas: de la sorpresa a la atención |
+| 😐 Neutral | 🎯 Encuentra el distinto | Reto de atención que sube de nivel |
+
+Si el minijuego se elige sin detección, se muestra un selector con los 7. Cada partida guarda qué juego se jugó (`activity_completions.game_key`). Los juegos están en `src/pages/activities/games/`.
 
 ---
 
@@ -157,7 +185,7 @@ El cliente **no puede escribir XP**: `xp_ledger` no tiene política de inserció
 | RNF-02 Auth + RLS | Sección 6 de `schema.sql` |
 | RNF-03 Navegador moderno, responsivo, PWA | Diseño móvil con barra inferior, `vite-plugin-pwa` (instalable y offline) |
 | RNF-04 Máx. 200 XP/día | `grant_xp` / `cappedGrant` |
-| Casos de uso de mentor | `pages/Mentorship.tsx`, `mentor_sessions` |
+| Casos de uso de mentor | `pages/Mentees.tsx`, `pages/MenteeDetail.tsx`, `pages/Mentorship.tsx`, `mentorships`, `mentor_consents` |
 | Dashboard analítico | `pages/Analytics.tsx`, `get_analytics` |
 
 ### Diferencias respecto al documento v2 (para actualizarlo)
@@ -202,7 +230,7 @@ scripts/copy-models.mjs  copia los modelos de face-api a public/models al instal
 Para probar el esquema SQL en un PostgreSQL 15+ local:
 
 ```bash
-psql -d moodwave_test -f supabase/tests/00_stub_supabase.sql -f supabase/schema.sql -f supabase/tests/01_flujo.sql -f supabase/tests/02_rostro.sql
+psql -d moodwave_test -f supabase/tests/00_stub_supabase.sql -f supabase/schema.sql -f supabase/tests/01_flujo.sql -f supabase/tests/02_rostro.sql -f supabase/tests/03_roles_mentoria.sql
 ```
 
 ---

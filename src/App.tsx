@@ -1,10 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { useAuth } from './context/AuthContext';
+import { useAuth, wasExplicitSignOut } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import { Spinner } from './components/ui';
-import { roleAtLeast } from './lib/catalog';
-import type { RoleKey } from './lib/types';
+import { can, isStaff, type Perm } from './lib/catalog';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -20,22 +19,32 @@ import Admin from './pages/Admin';
 import Analytics from './pages/Analytics';
 import Curation from './pages/Curation';
 import NotFound from './pages/NotFound';
+import StaffHome from './pages/StaffHome';
+import Mentees from './pages/Mentees';
+import MenteeDetail from './pages/MenteeDetail';
 
 function Protected({ children }: { children: ReactNode }) {
   const { profile, loading, userId } = useAuth();
   const loc = useLocation();
   if (loading) return <Spinner />;
-  if (!userId) return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
+  if (!userId) return <Navigate to="/login" replace state={wasExplicitSignOut() ? null : { from: loc.pathname + loc.search }} />;
   if (!profile) return <div className="page"><div className="error">No se pudo cargar tu perfil. Verifica que el esquema SQL esté instalado en Supabase.</div></div>;
   return <>{children}</>;
 }
 
-function RequireRole({ min, children }: { min: RoleKey; children: ReactNode }) {
+function RequirePerm({ perm, children }: { perm: Perm | Perm[]; children: ReactNode }) {
   const { profile } = useAuth();
-  if (!profile || !roleAtLeast(profile.role, min)) {
+  const perms = Array.isArray(perm) ? perm : [perm];
+  if (!profile || !perms.some((p) => can(profile.role, p))) {
     return <div className="page"><div className="error">No tienes permisos para ver esta sección.</div></div>;
   }
   return <>{children}</>;
+}
+
+/** Cada rol entra a su propio inicio; el usuario (listener/invitado) entra a su bienestar. */
+function RoleHome() {
+  const { profile } = useAuth();
+  return profile && isStaff(profile.role) ? <StaffHome /> : <Dashboard />;
 }
 
 function PublicOnly({ children }: { children: ReactNode }) {
@@ -50,7 +59,8 @@ export default function App() {
       <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
       <Route path="/registro" element={<PublicOnly><Register /></PublicOnly>} />
       <Route element={<Protected><Layout /></Protected>}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<RoleHome />} />
+        <Route path="bienestar" element={<Dashboard />} />
         <Route path="detectar" element={<Detect />} />
         <Route path="actividades" element={<Activities />} />
         <Route path="actividad/:assignmentId" element={<ActivityRunner />} />
@@ -58,10 +68,12 @@ export default function App() {
         <Route path="perfil" element={<Profile />} />
         <Route path="ranking" element={<Leaderboard />} />
         <Route path="mentoria" element={<Mentorship />} />
-        <Route path="curaduria" element={<RequireRole min="curator"><Curation /></RequireRole>} />
-        <Route path="moderacion" element={<RequireRole min="moderator"><Moderation /></RequireRole>} />
-        <Route path="analitica" element={<RequireRole min="analyst"><Analytics /></RequireRole>} />
-        <Route path="admin" element={<RequireRole min="admin"><Admin /></RequireRole>} />
+        <Route path="curaduria" element={<RequirePerm perm="curate"><Curation /></RequirePerm>} />
+        <Route path="acompanados" element={<RequirePerm perm="mentor"><Mentees /></RequirePerm>} />
+        <Route path="acompanados/:userId" element={<RequirePerm perm="mentor"><MenteeDetail /></RequirePerm>} />
+        <Route path="moderacion" element={<RequirePerm perm="moderate"><Moderation /></RequirePerm>} />
+        <Route path="analitica" element={<RequirePerm perm="analytics"><Analytics /></RequirePerm>} />
+        <Route path="admin" element={<RequirePerm perm={['manage_users', 'manage_badges']}><Admin /></RequirePerm>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

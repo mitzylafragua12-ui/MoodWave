@@ -24,11 +24,11 @@ export default function Activities() {
   );
 
   async function open(activity: ActivityKey, isPrimary: boolean) {
-    if (isPrimary && assignmentId) return nav(`/actividad/${assignmentId}`);
+    if (isPrimary && assignmentId) return nav(`/actividad/${assignmentId}?auto=1`);
     setBusy(activity);
     try {
       const id = await api.assignActivity(activity, detectionId);
-      nav(`/actividad/${id}`);
+      nav(`/actividad/${id}?auto=1`);
     } catch (e) { toast(errMsg(e), 'error'); } finally { setBusy(null); }
   }
 

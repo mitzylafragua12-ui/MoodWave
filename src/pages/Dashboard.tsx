@@ -72,7 +72,7 @@ export default function Dashboard() {
               <h3>{ACTIVITY_BY_KEY[pending.activity].icon} {ACTIVITY_BY_KEY[pending.activity].name}</h3>
               <p className="small muted">Recomendada {fmtDateTime(pending.assigned_at)}</p>
               {pending.emotion && <p><EmotionChip emotion={pending.emotion} confidence={pending.confidence} /></p>}
-              <Link to={`/actividad/${pending.assignment_id}`} className="btn btn-cyan btn-sm">Empezar · +{ACTIVITY_BY_KEY[pending.activity].base_xp} XP</Link>
+              <Link to={`/actividad/${pending.assignment_id}?auto=1`} className="btn btn-cyan btn-sm">Empezar · +{ACTIVITY_BY_KEY[pending.activity].base_xp} XP</Link>
             </div>
           )}
           <div className="card">

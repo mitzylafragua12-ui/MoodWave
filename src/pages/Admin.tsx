@@ -3,7 +3,7 @@ import { api } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
 import { useProfile } from '../context/AuthContext';
 import { errMsg, useToast } from '../context/ToastContext';
-import { ACTIVITIES, ROLES, ROLE_BY_KEY } from '../lib/catalog';
+import { ACTIVITIES, ROLES, ROLE_PERMS, can, canSuspend, isAdminRole, type Perm } from '../lib/catalog';
 import { fmtDate } from '../lib/date';
 import type { Badge, BadgeRule, RoleKey } from '../lib/types';
 import { ErrorBox, Modal, PageHead, Spinner } from '../components/ui';
@@ -15,12 +15,15 @@ const RULES: Record<BadgeRule, string> = {
 const EMPTY: Omit<Badge, 'id'> & { id?: number } = { key: '', name: '', description: '', icon: '🏅', xp_reward: 10, rule_type: 'completions', rule_activity_id: null, threshold: 1 };
 
 export default function Admin() {
-  const [tab, setTab] = useState<'users' | 'badges' | 'roles'>('users');
+  const me = useProfile();
+  const tabs = ([['users', 'Usuarios, roles y mentores', 'manage_users'], ['badges', 'Badges', 'manage_badges'], ['roles', 'Qué ve cada rol', null]] as const)
+    .filter(([, , perm]) => !perm || can(me.role, perm));
+  const [tab, setTab] = useState<'users' | 'badges' | 'roles'>(tabs[0][0]);
   return (
     <div className="page">
       <PageHead eyebrow="Administración" title="Gestión del sistema" color="var(--red)" />
       <div className="tabs" role="tablist">
-        {([['users', 'Usuarios y roles'], ['badges', 'Badges'], ['roles', 'Jerarquía de roles']] as const).map(([k, l]) => (
+        {tabs.map(([k, l]) => (
           <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
@@ -36,9 +39,13 @@ function Users() {
   const toast = useToast();
   const { data, error, loading, reload } = useAsync(() => api.listUsers(), []);
   const [q, setQ] = useState('');
-  const isSuper = me.role === 'superadmin';
-  const canEdit = (r: RoleKey) => isSuper || ROLE_BY_KEY[r].rank < 60;
-  const assignable = ROLES.filter((r) => isSuper || r.rank < 60);
+  const isSuper = can(me.role, 'manage_admins');
+  const canEdit = (r: RoleKey) => isSuper || !isAdminRole(r);
+  const assignable = ROLES.filter((r) => isSuper || !isAdminRole(r.key));
+  const mentors = data?.filter((u) => can(u.role_key, 'mentor') && !u.suspended) ?? [];
+  async function changeMentor(id: string, mentorId: string) {
+    try { await api.setMentor(id, mentorId || null); toast(mentorId ? 'Mentor asignado' : 'Mentor retirado'); reload(); } catch (e) { toast(errMsg(e), 'error'); }
+  }
 
   async function change(id: string, role: RoleKey) {
     try { await api.setRole(id, role); toast('Rol actualizado'); reload(); } catch (e) { toast(errMsg(e), 'error'); }
@@ -60,7 +67,7 @@ function Users() {
         <input className="input" style={{ maxWidth: 240 }} placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar usuario" />
       </div>
       <div className="table-wrap mt"><table>
-        <thead><tr><th>Usuario</th><th>Rol</th><th>Nivel / XP</th><th>Racha</th><th>Alta</th><th>Estado</th></tr></thead>
+        <thead><tr><th>Usuario</th><th>Rol</th><th>Mentor</th><th>Nivel / XP</th><th>Alta</th><th>Estado</th></tr></thead>
         <tbody>{data?.filter((u) => u.username.includes(q.toLowerCase()) || u.display_name.toLowerCase().includes(q.toLowerCase())).map((u) => (
           <tr key={u.id}>
             <td>
@@ -78,10 +85,16 @@ function Users() {
                 {(canEdit(u.role_key) ? assignable : ROLES).map((r) => <option key={r.key} value={r.key}>{r.name}</option>)}
               </select>
             </td>
-            <td className="small">{u.level} · {u.xp} XP</td>
-            <td className="small">🔥 {u.streak}</td>
+            <td>
+              <select className="input" style={{ padding: '6px 10px', minWidth: 140 }} value={u.mentor_id ?? ''} aria-label={`Mentor de ${u.username}`}
+                onChange={(e) => changeMentor(u.id, e.target.value)}>
+                <option value="">Sin mentor</option>
+                {mentors.filter((m) => m.id !== u.id).map((m) => <option key={m.id} value={m.id}>@{m.username}</option>)}
+              </select>
+            </td>
+            <td className="small">{u.level} · {u.xp} XP<div className="faint">🔥 {u.streak}</div></td>
             <td className="small faint">{fmtDate(u.created_at)}</td>
-            <td>{u.id !== me.id && ROLE_BY_KEY[u.role_key].rank < ROLE_BY_KEY[me.role].rank ? (
+            <td>{u.id !== me.id && canSuspend(me.role, u.role_key) ? (
               <button className={`btn btn-sm ${u.suspended ? 'btn-ghost' : 'btn-danger'}`} onClick={() => suspend(u.id, !u.suspended)}>{u.suspended ? 'Reactivar' : 'Suspender'}</button>
             ) : <span className="small faint">{u.suspended ? 'Suspendido' : 'Activo'}</span>}</td>
           </tr>
@@ -169,13 +182,24 @@ function Badges() {
   );
 }
 
+const PERM_LABEL: Record<Perm, string> = {
+  curate: 'Curaduría', moderate: 'Moderación', mentor: 'Acompañados', analytics: 'Analítica',
+  manage_users: 'Usuarios y mentores', manage_badges: 'Badges', manage_admins: 'Gestionar administradores',
+};
+
 function RolesInfo() {
   return (
     <div className="card">
-      <p className="muted small">Los roles son jerárquicos: cada rol hereda los permisos de los de menor rango.</p>
+      <p className="muted small">Cada rol entra a su propio panel y ve solo sus herramientas. Todos los roles pueden usar además la parte de bienestar (detectar, actividades, progreso).</p>
       <div className="table-wrap"><table>
-        <thead><tr><th>Rango</th><th>Rol</th><th>Permisos</th></tr></thead>
-        <tbody>{ROLES.map((r) => <tr key={r.key}><td>{r.rank}</td><td><strong>{r.name}</strong> <span className="faint small">({r.key})</span></td><td className="small">{r.description}</td></tr>)}</tbody>
+        <thead><tr><th>Rol</th><th>Herramientas de trabajo</th><th>Descripción</th></tr></thead>
+        <tbody>{ROLES.map((r) => (
+          <tr key={r.key}>
+            <td><strong>{r.name}</strong> <span className="faint small">({r.key})</span></td>
+            <td className="small">{ROLE_PERMS[r.key].length ? ROLE_PERMS[r.key].map((p) => PERM_LABEL[p]).join(' · ') : <span className="faint">Solo bienestar</span>}</td>
+            <td className="small muted">{r.description}</td>
+          </tr>
+        ))}</tbody>
       </table></div>
     </div>
   );

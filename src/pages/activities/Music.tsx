@@ -8,6 +8,7 @@ import { Spinner } from '../../components/ui';
 const MIN_SEC = 60;
 
 export default function Music({ emotion, onComplete, busy }: ActivityProps) {
+  // Spotify no permite reproducir sin un toque del usuario: la playlist queda lista para darle play.
   const { data: playlists } = useAsync(() => api.getPlaylists(), []);
   const [seconds, setSeconds] = useState(0);
 

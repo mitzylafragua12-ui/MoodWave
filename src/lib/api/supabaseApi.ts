@@ -2,7 +2,7 @@ import { createClient, FunctionsHttpError, type PostgrestError } from '@supabase
 import type { Api } from './types';
 import type {
   ActivityKey, Assignment, Badge, CompletionResult, DetectionResult, DetectionRow, EarnedBadge, EmotionKey, HistoryItem,
-  LedgerEntry, Profile, RoleKey,
+  LedgerEntry, MenteeDetail, MenteeRow, MyMentorship, Profile, RoleKey,
 } from '../types';
 import { ACTIVITY_BY_ID, EMOTIONS, ROLES } from '../catalog';
 
@@ -140,6 +140,7 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
         p_score: input.score ?? null,
         p_journal_text: input.journalText ?? null,
         p_journal_prompt: input.journalPrompt ?? null,
+        p_game: input.game ?? null,
       })) as CompletionResult;
     },
 
@@ -206,6 +207,19 @@ export function createSupabaseApi(url: string, anonKey: string): Api {
     async completeMentorSession(id, feedback, notes) {
       check(await sb.rpc('mentor_complete_session', { p_session: id, p_feedback: feedback, p_notes: notes }));
     },
+
+    async getMyMentorship() { return check(await sb.rpc('my_mentorship')) as MyMentorship; },
+    async setMentorConsent(allowed) { check(await sb.rpc('set_mentor_consent', { p_allowed: allowed })); },
+    async listMentees() {
+      const rows = (check(await sb.rpc('mentor_list_mentees')) ?? []) as MenteeRow[];
+      return rows.map((r) => ({ ...r, last_emotion: r.last_emotion as EmotionKey | null }));
+    },
+    async getMentee(userId) {
+      const d = check(await sb.rpc('mentor_get_mentee', { p_user: userId })) as MenteeDetail;
+      return { ...d, detections: d.detections.map((x) => ({ ...x, confidence: Number(x.confidence) })),
+        history: d.history.map((h) => ({ ...h, confidence: h.confidence == null ? null : Number(h.confidence) })) };
+    },
+    async setMentor(userId, mentorId) { check(await sb.rpc('admin_set_mentor', { p_user: userId, p_mentor: mentorId })); },
 
     async createReport(r) {
       check(await sb.from('reports').insert({ ...r, reporter_id: await uid() }));

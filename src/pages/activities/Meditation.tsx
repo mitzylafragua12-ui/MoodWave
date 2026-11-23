@@ -12,11 +12,11 @@ const CYCLE = PHASES.reduce((s, p) => s + p.sec, 0);
 const OPTIONS = [1, 3, 5];
 const MIN_SEC = 60;
 
-export default function Meditation({ onComplete, busy }: ActivityProps) {
+export default function Meditation({ onComplete, busy, autoStart }: ActivityProps) {
   const [minutes, setMinutes] = useState(3);
   const [elapsed, setElapsed] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [started, setStarted] = useState(false);
+  const [running, setRunning] = useState(autoStart);
+  const [started, setStarted] = useState(autoStart);
   const last = useRef(0);
   const total = minutes * 60;
   const done = elapsed >= total;
@@ -76,6 +76,14 @@ export default function Meditation({ onComplete, busy }: ActivityProps) {
             </div>
             <div className="phase mt" aria-live="polite">{done ? 'Terminado' : running ? `${phase.name} · ${phaseLeft}` : 'En pausa'}</div>
             <div className="small faint">Inhala · Sostén · Exhala</div>
+            {!done && (
+              <div className="row mt" role="radiogroup" aria-label="Duración" style={{ justifyContent: 'center' }}>
+                <span className="small faint">Duración:</span>
+                {OPTIONS.filter((m) => m * 60 > elapsed).map((m) => (
+                  <button key={m} role="radio" aria-checked={minutes === m} className={`btn btn-sm ${minutes === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => setMinutes(m)}>{m} min</button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="row" style={{ justifyContent: 'center' }}>
             {!done && <button className="btn btn-ghost" onClick={() => setRunning((r) => !r)}>{running ? 'Pausar' : 'Reanudar'}</button>}

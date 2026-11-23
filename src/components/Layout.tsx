@@ -3,28 +3,28 @@ import { asset } from '../lib/paths';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth, useProfile } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { roleAtLeast } from '../lib/catalog';
-import type { RoleKey } from '../lib/types';
+import { can, isStaff, ROLE_BY_KEY, type Perm } from '../lib/catalog';
 import { RoleChip } from './ui';
 
-interface NavItem { to: string; label: string; ico: string; min?: RoleKey; end?: boolean }
+interface NavItem { to: string; label: string; ico: string; perm?: Perm; end?: boolean }
 
-const MAIN: NavItem[] = [
-  { to: '/', label: 'Inicio', ico: '🏠', end: true },
+// Parte de bienestar: la usan todos los roles.
+const WELLNESS: NavItem[] = [
   { to: '/detectar', label: 'Detectar', ico: '📷' },
   { to: '/actividades', label: 'Actividades', ico: '✨' },
   { to: '/historial', label: 'Historial', ico: '🗂️' },
   { to: '/ranking', label: 'Ranking', ico: '🏆' },
-  { to: '/mentoria', label: 'Mentoría', ico: '🤝' },
+  { to: '/mentoria', label: 'Mi mentoría', ico: '🤝' },
   { to: '/perfil', label: 'Perfil', ico: '👤' },
 ];
-const STAFF: NavItem[] = [
-  { to: '/curaduria', label: 'Curaduría', ico: '🎵', min: 'curator' },
-  { to: '/moderacion', label: 'Moderación', ico: '🛡️', min: 'moderator' },
-  { to: '/analitica', label: 'Analítica', ico: '📊', min: 'analyst' },
-  { to: '/admin', label: 'Administración', ico: '⚙️', min: 'admin' },
+// Herramientas de trabajo: cada rol ve solo las suyas.
+const WORK: NavItem[] = [
+  { to: '/curaduria', label: 'Curaduría', ico: '🎵', perm: 'curate' },
+  { to: '/acompanados', label: 'Mis acompañados', ico: '🧑‍🤝‍🧑', perm: 'mentor' },
+  { to: '/moderacion', label: 'Moderación', ico: '🛡️', perm: 'moderate' },
+  { to: '/analitica', label: 'Analítica', ico: '📊', perm: 'analytics' },
+  { to: '/admin', label: 'Administración', ico: '⚙️', perm: 'manage_users' },
 ];
-const BOTTOM: NavItem[] = [MAIN[0], MAIN[1], MAIN[2], MAIN[6]];
 
 export function Layout() {
   const profile = useProfile();
@@ -33,7 +33,10 @@ export function Layout() {
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
 
-  const staff = STAFF.filter((i) => roleAtLeast(profile.role, i.min!));
+  const staff = isStaff(profile.role);
+  const work = WORK.filter((i) => can(profile.role, i.perm!));
+  const home: NavItem = { to: '/', label: staff ? `Panel de ${ROLE_BY_KEY[profile.role].name.toLowerCase()}` : 'Inicio', ico: staff ? '🧭' : '🏠', end: true };
+  const bottom: NavItem[] = [{ ...home, label: 'Inicio' }, WELLNESS[0], WELLNESS[1], WELLNESS[5]];
   const link = (i: NavItem) => (
     <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
       <span className="ico" aria-hidden>{i.ico}</span>{i.label}
@@ -45,9 +48,12 @@ export function Layout() {
       <a href="#contenido" className="sr-only">Saltar al contenido</a>
       <aside className={`sidebar${open ? ' open' : ''}`} aria-label="Navegación principal">
         <Link to="/" className="brand"><img src={asset('icon.svg')} alt="" /><span>Mood<b>Wave</b></span></Link>
-        {MAIN.map(link)}
-        {staff.length > 0 && <div className="nav-section">Gestión</div>}
-        {staff.map(link)}
+        {link(home)}
+        {work.length > 0 && <div className="nav-section">Mi trabajo</div>}
+        {work.map(link)}
+        <div className="nav-section">Mi bienestar</div>
+        {staff && link({ to: '/bienestar', label: 'Mi progreso', ico: '🌊' })}
+        {WELLNESS.map(link)}
         <div className="sidebar-footer stack" style={{ gap: 10 }}>
           <div className="spread">
             <div>
@@ -80,7 +86,7 @@ export function Layout() {
       </div>
 
       <nav className="bottom-nav" aria-label="Navegación rápida">
-        {BOTTOM.map((i) => (
+        {bottom.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span className="dot" aria-hidden>{i.ico}</span>{i.label}
           </NavLink>

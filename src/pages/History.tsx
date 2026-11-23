@@ -51,7 +51,7 @@ function Sessions() {
                 <td className="small">
                   {h.completed_at
                     ? <span style={{ color: 'var(--green)' }}>✓ {h.duration_seconds ? fmtDuration(h.duration_seconds) : 'Hecha'}</span>
-                    : <Link to={`/actividad/${h.assignment_id}`}>Pendiente · hacer</Link>}
+                    : <Link to={`/actividad/${h.assignment_id}?auto=1`}>Pendiente · hacer</Link>}
                 </td>
               </tr>
             ))}

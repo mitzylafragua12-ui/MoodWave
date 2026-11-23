@@ -4,7 +4,7 @@ import { JOURNAL_PROMPTS } from '../../lib/catalog';
 
 const MIN = 20;
 
-export default function Journal({ emotion, onComplete, busy }: ActivityProps) {
+export default function Journal({ emotion, onComplete, busy, autoStart }: ActivityProps) {
   const prompts = JOURNAL_PROMPTS[emotion ?? 'free'];
   const [idx, setIdx] = useState(() => Math.floor(Math.random() * prompts.length));
   const [text, setText] = useState('');
@@ -21,7 +21,7 @@ export default function Journal({ emotion, onComplete, busy }: ActivityProps) {
       </div>
       <h2>{prompt}</h2>
       <label htmlFor="journal" className="sr-only">Tu entrada del diario</label>
-      <textarea id="journal" className="input mt" value={text} maxLength={5000} onChange={(e) => setText(e.target.value)}
+      <textarea id="journal" autoFocus={autoStart} className="input mt" value={text} maxLength={5000} onChange={(e) => setText(e.target.value)}
         placeholder="Escribe con libertad. Nadie más puede leer tu diario." />
       <div className="spread mt">
         <span className="small faint">{words} palabras · {len < MIN ? `mínimo ${MIN} caracteres` : '¡Bien!'}</span>

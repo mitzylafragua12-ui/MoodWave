@@ -8,18 +8,18 @@ import type {
   ActivityKey, AdminUser, Analytics, Badge, CompletionResult, DetectionResult, EmotionKey, HistoryItem,
   JournalEntry, LedgerEntry, MentorSession, Playlist, Profile, Report, RoleKey,
 } from '../types';
-import { ACTIVITIES, ACTIVITY_BY_KEY, DEFAULT_BADGES, DEFAULT_PLAYLISTS, EMOTIONS, RECOMMENDATIONS, ROLE_BY_KEY, roleAtLeast } from '../catalog';
+import { ACTIVITIES, ACTIVITY_BY_KEY, DEFAULT_BADGES, DEFAULT_PLAYLISTS, EMOTIONS, RECOMMENDATIONS, can, canSuspend, isAdminRole, type Perm } from '../catalog';
 import { DAILY_CHECKIN_XP, cappedGrant, effectiveStreak, levelForXp, nextStreak, type BadgeStats, badgeValue } from '../gamification';
 import { localDay } from '../date';
 import { FACE_THRESHOLD, isValidDescriptor, matchFace } from '../faceAuth';
 
-const STORAGE_KEY = 'moodwave-demo-db-v1';
+const STORAGE_KEY = 'moodwave-demo-db-v2';
 export const DEMO_PASSWORD = 'moodwave123';
 
 interface UserRow extends Profile { email: string; password_hash: string }
 interface DetectionRec { id: string; user_id: string; emotion: EmotionKey; confidence: number; scores: Record<string, number>; source: 'camera' | 'manual'; created_at: string }
 interface AssignmentRec { id: string; user_id: string; detection_id: string | null; activity: ActivityKey; reason: HistoryItem['reason']; created_at: string }
-interface CompletionRec { id: string; assignment_id: string; user_id: string; duration_seconds: number; score: number | null; created_at: string }
+interface CompletionRec { id: string; assignment_id: string; user_id: string; duration_seconds: number; score: number | null; game_key?: string | null; created_at: string }
 interface LedgerRec extends LedgerEntry { user_id: string; completion_id: string | null; badge_id: number | null }
 interface JournalRec extends JournalEntry { user_id: string; completion_id: string | null }
 interface SessionRec { id: string; mentee_id: string; mentor_id: string | null; topic: string; status: MentorSession['status']; notes: string | null; feedback: string | null; created_at: string; completed_at: string | null }
@@ -40,6 +40,8 @@ interface DB {
   session: string | null;
   seq: number;
   faces?: { user_id: string; descriptor: number[]; updated_at: string }[];
+  mentorships?: { mentee_id: string; mentor_id: string; assigned_at: string }[];
+  consents?: { user_id: string; allowed: boolean; created_at: string }[];
 }
 
 const uuid = () => crypto.randomUUID();
@@ -147,7 +149,7 @@ class Engine {
     this.db.assignments.push(asg);
     return asg.id;
   }
-  complete(userId: string, assignmentId: string, input: { durationSeconds: number; score?: number | null; journalText?: string | null; journalPrompt?: string | null }): CompletionResult {
+  complete(userId: string, assignmentId: string, input: { durationSeconds: number; score?: number | null; journalText?: string | null; journalPrompt?: string | null; game?: string | null }): CompletionResult {
     const u = this.active(userId);
     const asg = this.db.assignments.find((a) => a.id === assignmentId && a.user_id === userId);
     if (!asg) throw new Error('Asignación no encontrada');
@@ -157,7 +159,7 @@ class Engine {
     const text = input.journalText?.trim() ?? '';
     if (act.key === 'journaling' && text.length < 20) throw new Error('La entrada del diario debe tener al menos 20 caracteres');
     const levelBefore = u.level;
-    const comp: CompletionRec = { id: uuid(), assignment_id: assignmentId, user_id: userId, duration_seconds: Math.round(input.durationSeconds), score: input.score ?? null, created_at: this.iso() };
+    const comp: CompletionRec = { id: uuid(), assignment_id: assignmentId, user_id: userId, duration_seconds: Math.round(input.durationSeconds), score: input.score ?? null, game_key: act.key === 'minigame' ? input.game ?? null : null, created_at: this.iso() };
     this.db.completions.push(comp);
     if (act.key === 'journaling') {
       const emotion = this.db.detections.find((d) => d.id === asg.detection_id)?.emotion ?? null;
@@ -258,6 +260,12 @@ export async function buildSeedDb(): Promise<DB> {
   db.sessions.push({ id: uuid(), mentee_id: users[0].id, mentor_id: users[3].id, topic: 'Me cuesta organizarme con los exámenes finales.', status: 'completed', notes: 'Seguir en 1 semana.', feedback: 'Prueba bloques de estudio de 25 min con meditación de 1 min entre bloques. ¡Vas muy bien!', created_at: e.iso(), completed_at: e.iso() });
   db.sessions.push({ id: uuid(), mentee_id: users[8].id, mentor_id: null, topic: 'Siento mucha ansiedad por las mañanas.', status: 'requested', notes: null, feedback: null, created_at: e.iso(), completed_at: null });
   db.reports.push({ id: uuid(), reporter_id: users[7].id, reported_user_id: users[10].id, target_type: 'user', target_id: null, reason: 'Nombre de usuario inapropiado en el ranking.', status: 'open', resolution: null, resolved_by: null, resolved_at: null, created_at: e.iso() });
+  // Mentoría: demo y ana_ola acompañadas por @mentor; solo demo dio permiso para ver su historial.
+  db.mentorships = [
+    { mentee_id: users[0].id, mentor_id: users[3].id, assigned_at: e.iso() },
+    { mentee_id: users[7].id, mentor_id: users[3].id, assigned_at: e.iso() },
+  ];
+  db.consents = [{ user_id: users[0].id, allowed: true, created_at: e.iso() }];
   db.session = null;
   return db;
 }
@@ -285,12 +293,14 @@ export function createDemoApi(): Api {
     if (!d.session) throw new Error('No autenticado');
     return d.session;
   }
-  async function requireRole(min: RoleKey) {
+  async function requirePerm(...perms: Perm[]) {
     const e = await engine();
     const u = e.user(await me());
-    if (!roleAtLeast(u.role, min)) throw new Error('Permiso denegado');
+    if (u.suspended || !perms.some((p) => can(u.role, p))) throw new Error('Permiso denegado');
     return { e, u };
   }
+  const consentOf = (d: DB, userId: string) =>
+    [...(d.consents ?? [])].filter((c) => c.user_id === userId).sort((a, b) => b.created_at.localeCompare(a.created_at))[0]?.allowed ?? false;
   function setSession(id: string | null) {
     db!.session = id;
     save();
@@ -382,7 +392,7 @@ export function createDemoApi(): Api {
     async getBadges() { return [...(await load()).badges].sort((a, b) => a.id - b.id); },
     async getPlaylists() { return (await load()).playlists; },
     async updatePlaylist(emotion, spotifyId, title) {
-      const { e } = await requireRole('curator');
+      const { e } = await requirePerm('curate');
       const p = e.db.playlists.find((x) => x.emotion === emotion)!;
       p.spotify_playlist_id = spotifyId;
       p.title = title;
@@ -483,7 +493,7 @@ export function createDemoApi(): Api {
     async listMentorSessions() {
       const e = await engine();
       const uid = await me();
-      const isMentor = roleAtLeast(e.user(uid).role, 'mentor');
+      const isMentor = can(e.user(uid).role, 'mentor');
       return e.db.sessions
         .filter((s) => s.mentee_id === uid || s.mentor_id === uid || (s.status === 'requested' && isMentor))
         .sort((a, b) => b.created_at.localeCompare(a.created_at))
@@ -507,11 +517,13 @@ export function createDemoApi(): Api {
       save();
     },
     async claimMentorSession(id) {
-      const { e, u } = await requireRole('mentor');
+      const { e, u } = await requirePerm('mentor');
       const s = e.db.sessions.find((x) => x.id === id && x.status === 'requested' && x.mentee_id !== u.id);
       if (!s) throw new Error('La sesión ya no está disponible');
       s.mentor_id = u.id;
       s.status = 'active';
+      e.db.mentorships ??= [];
+      if (!e.db.mentorships.some((m) => m.mentee_id === s.mentee_id)) e.db.mentorships.push({ mentee_id: s.mentee_id, mentor_id: u.id, assigned_at: e.iso() });
       save();
     },
     async completeMentorSession(id, feedback, notes) {
@@ -523,6 +535,63 @@ export function createDemoApi(): Api {
       save();
     },
 
+    async getMyMentorship() {
+      const d = await load();
+      const uid = await me();
+      const m = (d.mentorships ?? []).find((x) => x.mentee_id === uid);
+      const last = [...(d.consents ?? [])].filter((c) => c.user_id === uid).sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+      return { mentor_username: nameOf(d, m?.mentor_id ?? null), consent: last?.allowed ?? false, consent_at: last?.created_at ?? null };
+    },
+    async setMentorConsent(allowed) {
+      const e = await engine();
+      const uid = await me();
+      (e.db.consents ??= []).push({ user_id: uid, allowed, created_at: e.iso() });
+      save();
+    },
+    async listMentees() {
+      const { e, u } = await requirePerm('mentor');
+      return (e.db.mentorships ?? []).filter((m) => m.mentor_id === u.id).map((m) => {
+        const p = e.user(m.mentee_id);
+        const ok = consentOf(e.db, p.id);
+        const dets = e.db.detections.filter((d) => d.user_id === p.id).sort((a, b) => b.created_at.localeCompare(a.created_at));
+        return {
+          user_id: p.id, username: p.username, display_name: p.display_name, assigned_at: m.assigned_at, consent: ok,
+          level: ok ? p.level : null, xp: ok ? p.xp : null, streak: ok ? effectiveStreak(p.streak, p.last_active_date, e.today()) : null,
+          last_emotion: ok ? dets[0]?.emotion ?? null : null, last_seen: ok ? dets[0]?.created_at ?? null : null,
+        };
+      }).sort((a, b) => a.username.localeCompare(b.username));
+    },
+    async getMentee(userId) {
+      const { e, u } = await requirePerm('mentor');
+      if (!(e.db.mentorships ?? []).some((m) => m.mentee_id === userId && m.mentor_id === u.id)) throw new Error('Esta persona no está asignada a ti');
+      if (!consentOf(e.db, userId)) throw new Error('Esta persona no ha dado permiso para ver su historial');
+      const p = e.user(userId);
+      const since = Date.now() - 30 * 86400_000;
+      return {
+        user_id: p.id, username: p.username, display_name: p.display_name, level: p.level, xp: p.xp,
+        streak: effectiveStreak(p.streak, p.last_active_date, e.today()), longest_streak: p.longest_streak,
+        detections: e.db.detections.filter((d) => d.user_id === userId && Date.parse(d.created_at) >= since)
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .map(({ id, emotion, confidence, source, created_at }) => ({ id, emotion, confidence, source, created_at })),
+        history: e.db.assignments.filter((a) => a.user_id === userId).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 30)
+          .map((a) => {
+            const det = e.db.detections.find((x) => x.id === a.detection_id);
+            const c = e.db.completions.find((x) => x.assignment_id === a.id);
+            return { assignment_id: a.id, activity: a.activity, reason: a.reason, assigned_at: a.created_at, emotion: det?.emotion ?? null, confidence: det?.confidence ?? null, completed_at: c?.created_at ?? null, duration_seconds: c?.duration_seconds ?? null };
+          }),
+      };
+    },
+    async setMentor(userId, mentorId) {
+      const { e } = await requirePerm('manage_users');
+      e.db.mentorships = (e.db.mentorships ?? []).filter((m) => m.mentee_id !== userId);
+      if (mentorId) {
+        if (mentorId === userId) throw new Error('Nadie puede ser su propio mentor');
+        if (!can(e.user(mentorId).role, 'mentor')) throw new Error('Esa persona no tiene rol de mentor');
+        e.db.mentorships.push({ mentee_id: userId, mentor_id: mentorId, assigned_at: e.iso() });
+      }
+      save();
+    },
+
     async createReport(r) {
       const e = await engine();
       const uid = await me();
@@ -531,7 +600,7 @@ export function createDemoApi(): Api {
       save();
     },
     async listReports() {
-      const { e } = await requireRole('moderator');
+      const { e } = await requirePerm('moderate');
       return [...e.db.reports]
         .sort((a, b) => Number(b.status === 'open') - Number(a.status === 'open') || b.created_at.localeCompare(a.created_at))
         .map((r) => ({
@@ -541,42 +610,43 @@ export function createDemoApi(): Api {
         }));
     },
     async resolveReport(id, status, resolution) {
-      const { e, u } = await requireRole('moderator');
+      const { e, u } = await requirePerm('moderate');
       const r = e.db.reports.find((x) => x.id === id);
       if (!r) throw new Error('Reporte no encontrado');
       Object.assign(r, { status, resolution, resolved_by: u.id, resolved_at: e.iso() });
       save();
     },
     async setSuspended(userId, suspended) {
-      const { e, u } = await requireRole('moderator');
+      const { e, u } = await requirePerm('moderate', 'manage_users');
       if (userId === u.id) throw new Error('No puedes suspenderte a ti mismo');
       const t = e.user(userId);
-      if (ROLE_BY_KEY[t.role].rank >= ROLE_BY_KEY[u.role].rank) throw new Error('No puedes suspender a un usuario con rol igual o superior');
+      if (!canSuspend(u.role, t.role)) throw new Error('Solo un superadmin puede suspender a un administrador');
       t.suspended = suspended;
       save();
     },
 
     async listUsers() {
-      const { e } = await requireRole('moderator');
+      const { e } = await requirePerm('moderate', 'manage_users');
+      const ms = e.db.mentorships ?? [];
       return [...e.db.users].sort((a, b) => b.created_at.localeCompare(a.created_at))
-        .map<AdminUser>((u) => ({ id: u.id, username: u.username, display_name: u.display_name, role_key: u.role, xp: u.xp, level: u.level, streak: effectiveStreak(u.streak, u.last_active_date, e.today()), suspended: u.suspended, created_at: u.created_at, has_face: (e.db.faces ?? []).some((f) => f.user_id === u.id) }));
+        .map<AdminUser>((u) => ({ id: u.id, username: u.username, display_name: u.display_name, role_key: u.role, xp: u.xp, level: u.level, streak: effectiveStreak(u.streak, u.last_active_date, e.today()), suspended: u.suspended, created_at: u.created_at, has_face: (e.db.faces ?? []).some((f) => f.user_id === u.id), mentor_id: ms.find((m) => m.mentee_id === u.id)?.mentor_id ?? null, mentor_username: nameOf(e.db, ms.find((m) => m.mentee_id === u.id)?.mentor_id ?? null) }));
     },
     async adminDeleteFace(userId) {
-      const { e } = await requireRole('admin');
+      const { e } = await requirePerm('manage_users');
       e.db.faces = (e.db.faces ?? []).filter((f) => f.user_id !== userId);
       save();
     },
     async setRole(userId, role) {
-      const { e, u } = await requireRole('admin');
+      const { e, u } = await requirePerm('manage_users');
       if (userId === u.id) throw new Error('No puedes cambiar tu propio rol');
       const t = e.user(userId);
-      if ((ROLE_BY_KEY[role].rank >= 60 || ROLE_BY_KEY[t.role].rank >= 60) && u.role !== 'superadmin')
+      if ((isAdminRole(role) || isAdminRole(t.role)) && !can(u.role, 'manage_admins'))
         throw new Error('Solo un superadmin puede gestionar administradores');
       t.role = role;
       save();
     },
     async saveBadge(b) {
-      const { e } = await requireRole('admin');
+      const { e } = await requirePerm('manage_badges');
       if (b.id) {
         const i = e.db.badges.findIndex((x) => x.id === b.id);
         e.db.badges[i] = { ...(b as Badge) };
@@ -587,13 +657,13 @@ export function createDemoApi(): Api {
       save();
     },
     async deleteBadge(id) {
-      const { e } = await requireRole('admin');
+      const { e } = await requirePerm('manage_badges');
       e.db.badges = e.db.badges.filter((b) => b.id !== id);
       e.db.user_badges = e.db.user_badges.filter((b) => b.badge_id !== id);
       save();
     },
     async getAnalytics(days): Promise<Analytics> {
-      const { e } = await requireRole('analyst');
+      const { e } = await requirePerm('analytics');
       const since = Date.now() - days * 86400_000;
       const inRange = <T extends { created_at: string }>(xs: T[]) => xs.filter((x) => Date.parse(x.created_at) >= since);
       const dets = inRange(e.db.detections);

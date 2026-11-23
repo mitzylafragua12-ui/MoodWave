@@ -12,12 +12,17 @@ interface AuthState {
 
 const Ctx = createContext<AuthState | null>(null);
 
+// Al cerrar sesión a propósito no se recuerda la página anterior: quien entre después va a SU inicio.
+let explicitSignOut = false;
+export const wasExplicitSignOut = () => explicitSignOut;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfile = useCallback(async (id: string | null) => {
+    if (id) explicitSignOut = false;
     if (!id) { setProfile(null); return; }
     try {
       setProfile(await api.getProfile());
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile]);
 
   const refresh = useCallback(() => loadProfile(userId), [loadProfile, userId]);
-  const signOut = useCallback(async () => { await api.signOut(); setUserId(null); setProfile(null); }, []);
+  const signOut = useCallback(async () => { explicitSignOut = true; await api.signOut(); setUserId(null); setProfile(null); }, []);
 
   return <Ctx.Provider value={{ userId, profile, loading, refresh, signOut }}>{children}</Ctx.Provider>;
 }

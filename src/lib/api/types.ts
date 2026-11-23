@@ -1,6 +1,6 @@
 import type {
   ActivityKey, AdminUser, Analytics, Assignment, Badge, CompletionInput, CompletionResult, DetectionResult,
-  DetectionRow, EarnedBadge, EmotionKey, FaceStatus, HistoryItem, JournalEntry, LeaderRow, LedgerEntry, MentorSession,
+  DetectionRow, EarnedBadge, EmotionKey, FaceStatus, HistoryItem, MenteeDetail, MenteeRow, MyMentorship, JournalEntry, LeaderRow, LedgerEntry, MentorSession,
   Playlist, Profile, Recommendation, Report, RoleKey, SignUpResult,
 } from '../types';
 
@@ -55,6 +55,11 @@ export interface Api {
   cancelMentorSession(id: string): Promise<void>;
   claimMentorSession(id: string): Promise<void>;
   completeMentorSession(id: string, feedback: string, notes: string): Promise<void>;
+  getMyMentorship(): Promise<MyMentorship>;
+  setMentorConsent(allowed: boolean): Promise<void>;
+  listMentees(): Promise<MenteeRow[]>;
+  getMentee(userId: string): Promise<MenteeDetail>;
+  setMentor(userId: string, mentorId: string | null): Promise<void>;
 
   // Reportes y moderación
   createReport(r: { reported_user_id?: string | null; target_type: 'user' | 'mentor_session'; target_id?: string | null; reason: string }): Promise<void>;

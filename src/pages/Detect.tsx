@@ -9,6 +9,7 @@ import type { EmotionKey } from '../lib/types';
 import { ErrorBox, PageHead, ProgressBar } from '../components/ui';
 
 type Phase = 'idle' | 'loading' | 'running' | 'denied' | 'error';
+const AUTO_SECONDS = 3;
 
 export default function Detect() {
   const profile = useProfile();
@@ -23,6 +24,8 @@ export default function Detect() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showManual, setShowManual] = useState(false);
+  const [autoGo, setAutoGo] = useState(true);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState<number | null>(null);
   const startedAt = useRef(0);
 
@@ -89,17 +92,41 @@ export default function Detect() {
 
   const result = scores ? dominant(scores) : null;
   const stable = smoother.current.stable && faceFound;
+  const ready = phase === 'running' && !!result && smoother.current.stable;
+  const latest = useRef<{ emotion: EmotionKey; confidence: number; scores: Scores } | null>(null);
+  latest.current = result && scores ? { ...result, scores } : null;
+  const firing = useRef(false);
+
+  // En cuanto la lectura es estable, lleva a la actividad automáticamente tras una breve cuenta.
+  useEffect(() => {
+    if (!autoGo || !ready || saving) { setCountdown(null); return; }
+    setCountdown(AUTO_SECONDS);
+    const id = setInterval(() => setCountdown((c) => (c === null ? null : Math.max(0, c - 1))), 1000);
+    return () => clearInterval(id);
+  }, [autoGo, ready, saving]);
+  useEffect(() => {
+    if (countdown === 0 && latest.current) {
+      const l = latest.current;
+      confirm(l.emotion, l.confidence, l.scores, 'camera');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdown]);
 
   async function confirm(emotion: EmotionKey, confidence: number, s: Record<string, number>, source: 'camera' | 'manual') {
+    if (firing.current) return;
+    firing.current = true;
     setSaving(true);
     try {
       const r = await api.recordDetection(emotion, confidence, s, source);
       stop();
       if (r.xp_granted > 0) toast(`+${r.xp_granted} XP por tu check-in del día`);
       r.new_badges.forEach((b) => toast(`${b.icon} Logro desbloqueado: ${b.name}`));
-      nav(`/actividades?det=${r.detection_id}&a=${r.assignment_id}&e=${r.emotion}`);
+      // Directo a la actividad recomendada; arranca sola (?auto=1). Desde ahí se puede cambiar.
+      nav(`/actividad/${r.assignment_id}?auto=1`);
     } catch (e) {
       toast(errMsg(e), 'error');
+      setAutoGo(false);
+      firing.current = false;
     } finally { setSaving(false); }
   }
 
@@ -154,10 +181,17 @@ export default function Detect() {
                   ))}
                 </div>
                 {elapsed !== null && <p className="small faint">Lectura estable en {elapsed.toFixed(1)} s</p>}
-                <button className="btn btn-primary btn-block mt" disabled={!stable || saving || profile.suspended}
-                  onClick={() => confirm(result.emotion, result.confidence, scores!, 'camera')}>
-                  {saving ? 'Guardando…' : 'Ver actividad sugerida'}
-                </button>
+                {countdown !== null && !saving ? (
+                  <div className="notice mt spread" aria-live="polite">
+                    <span>Te llevo a tu actividad en <strong>{countdown}</strong>…</span>
+                    <button className="btn btn-ghost btn-sm" onClick={() => setAutoGo(false)}>Cancelar</button>
+                  </div>
+                ) : (
+                  <button className="btn btn-primary btn-block mt" disabled={!stable || saving || profile.suspended}
+                    onClick={() => confirm(result.emotion, result.confidence, scores!, 'camera')}>
+                    {saving ? 'Abriendo tu actividad…' : 'Ir a mi actividad'}
+                  </button>
+                )}
               </>
             ) : (
               <p className="muted">{phase === 'running' ? 'Detectando tu estado de ánimo…' : 'Aquí verás tu emoción y el nivel de confianza.'}</p>

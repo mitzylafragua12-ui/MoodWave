@@ -3,7 +3,8 @@ import { api } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
 import { useProfile } from '../context/AuthContext';
 import { errMsg, useToast } from '../context/ToastContext';
-import { ROLE_BY_KEY } from '../lib/catalog';
+import { canSuspend as allowed } from '../lib/catalog';
+import type { RoleKey } from '../lib/types';
 import { fmtDateTime } from '../lib/date';
 import type { Report } from '../lib/types';
 import { ErrorBox, Modal, PageHead, RoleChip, Spinner } from '../components/ui';
@@ -21,7 +22,7 @@ export default function Moderation() {
     try { await fn(); toast(ok); reports.reload(); users.reload(); } catch (e) { toast(errMsg(e), 'error'); }
   };
   const open = reports.data?.filter((r) => r.status === 'open').length ?? 0;
-  const canSuspend = (role: keyof typeof ROLE_BY_KEY) => ROLE_BY_KEY[role].rank < ROLE_BY_KEY[me.role].rank;
+  const canSuspend = (role: RoleKey) => allowed(me.role, role);
 
   return (
     <div className="page">

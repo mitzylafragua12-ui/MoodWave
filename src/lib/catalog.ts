@@ -18,7 +18,7 @@ export interface ActivityInfo {
   base_xp: number; min_duration_sec: number; color: string; icon: string;
 }
 export const ACTIVITIES: ActivityInfo[] = [
-  { id: 1, key: 'minigame', name: 'Minijuego', description: 'Burbujas de calma: revienta pensamientos y suelta tensión.', base_xp: 30, min_duration_sec: 30, color: '#22d3ee', icon: '🫧' },
+  { id: 1, key: 'minigame', name: 'Minijuego', description: 'Un juego distinto para cada emoción.', base_xp: 30, min_duration_sec: 20, color: '#22d3ee', icon: '🎮' },
   { id: 2, key: 'journaling', name: 'Diario emocional', description: 'Escribe cómo te sientes con una guía según tu emoción.', base_xp: 40, min_duration_sec: 0, color: '#a78bfa', icon: '✍️' },
   { id: 3, key: 'meditation', name: 'Meditación guiada', description: 'Respiración guiada con temporizador circular.', base_xp: 50, min_duration_sec: 60, color: '#38bdf8', icon: '🧘' },
   { id: 4, key: 'music', name: 'Música', description: 'Playlist de Spotify curada para tu estado de ánimo.', base_xp: 25, min_duration_sec: 60, color: '#f43f5e', icon: '🎧' },
@@ -87,15 +87,33 @@ export interface RoleInfo { id: number; key: RoleKey; name: string; rank: number
 export const ROLES: RoleInfo[] = [
   { id: 1, key: 'guest', name: 'Invitado', rank: 0, description: 'Acceso de prueba con funciones limitadas.' },
   { id: 2, key: 'listener', name: 'Listener', rank: 10, description: 'Usuario estándar: detecta, realiza actividades y gana XP.' },
-  { id: 3, key: 'curator', name: 'Curador', rank: 20, description: 'Gestiona las playlists recomendadas por emoción.' },
+  { id: 3, key: 'curator', name: 'Curador', rank: 20, description: 'Gestiona el contenido: playlists de Spotify por emoción.' },
   { id: 4, key: 'moderator', name: 'Moderador', rank: 30, description: 'Revisa reportes y suspende cuentas.' },
-  { id: 5, key: 'mentor', name: 'Mentor', rank: 40, description: 'Guía sesiones emocionales y da retroalimentación.' },
+  { id: 5, key: 'mentor', name: 'Mentor', rank: 40, description: 'Acompaña a sus personas asignadas; ve su historial solo con su permiso.' },
   { id: 6, key: 'analyst', name: 'Analista', rank: 50, description: 'Consulta el dashboard analítico agregado.' },
-  { id: 7, key: 'admin', name: 'Administrador', rank: 60, description: 'Gestiona usuarios, roles y badges.' },
-  { id: 8, key: 'superadmin', name: 'Superadmin', rank: 70, description: 'Control total, incluida la asignación de administradores.' },
+  { id: 7, key: 'admin', name: 'Administrador', rank: 60, description: 'Gestiona usuarios, roles, mentores y badges; ve analítica y moderación.' },
+  { id: 8, key: 'superadmin', name: 'Superadmin', rank: 70, description: 'Todas las herramientas, incluida la gestión de administradores.' },
 ];
 export const ROLE_BY_KEY = Object.fromEntries(ROLES.map((r) => [r.key, r])) as Record<RoleKey, RoleInfo>;
-export const roleAtLeast = (role: RoleKey, min: RoleKey) => ROLE_BY_KEY[role].rank >= ROLE_BY_KEY[min].rank;
+
+/** Permisos explícitos por rol (espejo de role_permissions en schema.sql). Todos los roles usan además la parte de bienestar. */
+export type Perm = 'curate' | 'moderate' | 'mentor' | 'analytics' | 'manage_users' | 'manage_badges' | 'manage_admins';
+export const ROLE_PERMS: Record<RoleKey, Perm[]> = {
+  guest: [],
+  listener: [],
+  curator: ['curate'],
+  moderator: ['moderate'],
+  mentor: ['mentor'],
+  analyst: ['analytics'],
+  admin: ['manage_users', 'manage_badges', 'analytics', 'moderate'],
+  superadmin: ['curate', 'moderate', 'mentor', 'analytics', 'manage_users', 'manage_badges', 'manage_admins'],
+};
+export const can = (role: RoleKey, perm: Perm) => ROLE_PERMS[role].includes(perm);
+export const isStaff = (role: RoleKey) => ROLE_PERMS[role].length > 0;
+/** El rango solo protege a los administradores: suspenderlos o cambiarles el rol requiere superadmin. */
+export const isAdminRole = (role: RoleKey) => ROLE_BY_KEY[role].rank >= 60;
+export const canSuspend = (me: RoleKey, target: RoleKey) =>
+  (can(me, 'moderate') || can(me, 'manage_users')) && (!isAdminRole(target) || can(me, 'manage_admins'));
 
 export const DEFAULT_BADGES: Badge[] = [
   { id: 1, key: 'first_wave', name: 'Primera ola', description: 'Realiza tu primera detección emocional.', icon: '🌊', xp_reward: 10, rule_type: 'detections', rule_activity_id: null, threshold: 1 },

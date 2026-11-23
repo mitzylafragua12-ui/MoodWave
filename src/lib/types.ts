@@ -48,6 +48,7 @@ export interface CompletionInput {
   score?: number | null;
   journalText?: string | null;
   journalPrompt?: string | null;
+  game?: string | null;
 }
 
 export interface CompletionResult {
@@ -155,6 +156,21 @@ export interface AdminUser {
   suspended: boolean;
   created_at: string;
   has_face: boolean;
+  mentor_id: string | null;
+  mentor_username: string | null;
+}
+
+export interface MyMentorship { mentor_username: string | null; consent: boolean; consent_at: string | null }
+
+export interface MenteeRow {
+  user_id: string; username: string; display_name: string; assigned_at: string; consent: boolean;
+  level: number | null; xp: number | null; streak: number | null; last_emotion: EmotionKey | null; last_seen: string | null;
+}
+
+export interface MenteeDetail {
+  user_id: string; username: string; display_name: string; level: number; xp: number; streak: number; longest_streak: number;
+  detections: DetectionRow[];
+  history: HistoryItem[];
 }
 
 export interface FaceStatus { enrolled: boolean; updated_at: string | null }
