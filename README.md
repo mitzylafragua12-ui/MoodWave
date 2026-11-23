@@ -226,16 +226,29 @@ El rango solo se usa para proteger a los administradores: suspenderlos o cambiar
 
 Al detectar la emoción, la app muestra una cuenta de 1 segundo (que se puede cancelar) y lleva **directo a la actividad recomendada**, que **arranca sola**: la meditación empieza a contar, el juego hace su cuenta regresiva y el diario abre con el cursor listo. Desde la actividad se puede pulsar *Cambiar actividad*. La música de Spotify es la excepción: los navegadores no permiten reproducir sin un toque.
 
-### Un juego por emoción
+### Cuatro juegos por emoción (28)
 
-| Emoción | Juego | Idea |
+| Emoción | Juegos | Idea |
 |---|---|---|
+| 😊 Feliz | ⭐ Lluvia de estrellas · 😄 Sonrisas escondidas · 🎵 Sigue la melodía · 🎈 Globos de colores | Aprovechar la energía y convertirla en atención |
+| 😢 Triste | 🌸 Jardín de luz · 🏮 Cielo de faroles · 🧩 Rompecabezas luminoso · 💛 Pensamientos amables | Ir sin prisa, pequeñas victorias, hablarse con cariño |
+| 😠 Enojo | 🫧 Burbujas de calma · 🥁 Tambor de desahogo (el ritmo se va calmando) · 🔥 Apaga las chispas · 🗑️ Al cesto | Soltar la tensión de forma segura |
+| 😨 Miedo | 🗼 Faro en calma · 🐚 Busca en la calma · 💡 Enciende las luces · ✨ Une las estrellas | Respiración, anclaje al presente y sensación de control |
+| 🤢 Disgusto | 🧽 Ventana limpia · ♻️ Separa y recicla · 💐 Ramo fresco · 🎨 Mandala de colores | Cambiar el foco a algo agradable y útil |
+| 😮 Sorpresa | 🎁 Memoria sorpresa · 🥤 ¿Dónde quedó? · 🚦 Reflejos de luz · 🔍 ¿Qué cambió? | De la sorpresa a la atención |
+| 😐 Neutral | 🎯 Encuentra el distinto · ➕ Suma rápida · 🌈 Color y palabra · 🔢 Números en orden | Activar la mente |
+
+- Al detectar una emoción, el minijuego elige **el de esa emoción que hace más tiempo no juegas** (se recuerda en el navegador), así no se repite siempre el mismo. Con *Elegir otro juego* aparecen primero los de tu emoción y después todos los demás.
+- Cada partida guarda qué juego se jugó (`activity_completions.game_key`). El marcador nunca baja de 0.
+- Los juegos están en `src/pages/activities/games/` (uno por archivo, todos reciben `addScore` y `say`) y se registran en `games/index.ts`. Para agregar uno: crea el componente, añádelo a `GAMES` con su emoción y traduce sus textos (la prueba `i18n.test.ts` avisa si falta alguno; los textos dentro de listas se marcan con `tm('…')`).
+
+---|---|---|
 | 😊 Feliz | ⭐ Lluvia de estrellas | Atrapar estrellas con una canasta: aprovechar la energía |
 | 😢 Triste | 🌸 Jardín de luz | Plantar flores con calma, con mensajes amables |
 | 😠 Enojo | 🫧 Burbujas de calma | Reventar burbujas con lo que molesta: soltar tensión |
 | 😨 Miedo | 🗼 Faro en calma | Mantener presionado al inhalar y soltar al exhalar |
 | 🤢 Disgusto | 🧽 Ventana limpia | Limpiar una ventana sucia y descubrir un paisaje |
-| 😮 Sorpresa | 🎁 Memoria sorpresa | Encontrar parejas: de la sorpresa a la atención |
+
 | 😐 Neutral | 🎯 Encuentra el distinto | Reto de atención que sube de nivel |
 
 Si el minijuego se elige sin detección, se muestra un selector con los 7. Cada partida guarda qué juego se jugó (`activity_completions.game_key`). Los juegos están en `src/pages/activities/games/`.

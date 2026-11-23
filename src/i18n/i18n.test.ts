@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ALL_LOCALES, setLang, t } from './index';
 import { ACTIVITIES, DEFAULT_BADGES, EMOTIONS, JOURNAL_PROMPTS, RECOMMENDATIONS, ROLES } from '../lib/catalog';
 import { LEVEL_NAMES } from '../lib/gamification';
+import { GAMES } from '../pages/activities/games';
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
@@ -20,7 +21,7 @@ function usedKeys(): Set<string> {
     if (f.includes('/i18n/')) continue;
     const src = readFileSync(f, 'utf8');
     if (src.includes('i18n-ignore-file')) continue;
-    for (const m of src.matchAll(new RegExp(String.raw`\btx?\(\s*` + str, 'g'))) keys.add(m[1].replace(/\\'/g, "'"));
+    for (const m of src.matchAll(new RegExp(String.raw`\bt[xm]?\(\s*` + str, 'g'))) keys.add(m[1].replace(/\\'/g, "'"));
     for (const m of src.matchAll(new RegExp(String.raw`\btx?\([^()]*?\?\s*` + str + String.raw`\s*:\s*` + str, 'g'))) {
       keys.add(m[1].replace(/\\'/g, "'")); keys.add(m[2].replace(/\\'/g, "'"));
     }
@@ -45,6 +46,7 @@ describe('traducciones al inglés', () => {
       ...ROLES.flatMap((r) => [r.name, r.description]), ...LEVEL_NAMES,
       ...Object.values(RECOMMENDATIONS).flatMap((rs) => rs.map(([, reason]) => reason)),
       ...Object.values(JOURNAL_PROMPTS).flat(),
+      ...GAMES.flatMap((g) => [g.name, g.why, g.howTo]),
     ];
     expect(texts.filter((x) => !(x in loc.dict))).toEqual([]);
     expect(DEFAULT_BADGES.filter((b) => !loc.badges[b.key]).map((b) => b.key)).toEqual([]);

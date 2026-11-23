@@ -1,32 +1,41 @@
 import { useState, type CSSProperties } from 'react';
 import type { ActivityProps } from '../ActivityRunner';
-import { EMOTION_BY_KEY } from '../../lib/catalog';
-import { GAMES, GAME_FOR_EMOTION } from './games';
+import { EMOTIONS, EMOTION_BY_KEY } from '../../lib/catalog';
+import { GAME_BY_KEY, GAMES_FOR_EMOTION, nextGameFor } from './games';
 import { GameShell } from './games/GameShell';
+import type { GameDef } from './games/types';
 import { t } from '../../i18n';
 
-/** Minijuego: según la emoción detectada se juega su juego; sin emoción, se elige uno. */
+/** Minijuego: con emoción detectada arranca uno de sus 4 juegos (rotando); sin emoción, se elige. */
 export default function Minigame({ emotion, onComplete, busy, autoStart }: ActivityProps) {
-  const [key, setKey] = useState<string | null>(emotion ? GAME_FOR_EMOTION[emotion].key : null);
+  const [key, setKey] = useState<string | null>(() => (emotion ? nextGameFor(emotion).key : null));
   const [picked, setPicked] = useState(false); // elegido a mano: también arranca solo
-  const game = GAMES.find((g) => g.key === key);
+  const game = key ? GAME_BY_KEY[key] : undefined;
 
   if (!game) {
+    // La emoción actual va primero; después las demás.
+    const order = emotion ? [emotion, ...EMOTIONS.map((e) => e.key).filter((k) => k !== emotion)] : EMOTIONS.map((e) => e.key);
+    const choose = (g: GameDef) => { setKey(g.key); setPicked(true); };
     return (
-      <div className="stack" style={{ maxWidth: 760 }}>
-        <p className="muted mb0">{t('Elige un juego. Cada uno está pensado para una emoción.')}</p>
-        <div className="grid grid-2">
-          {GAMES.map((g) => {
-            const e = EMOTION_BY_KEY[g.emotion];
-            return (
-              <button key={g.key} className="list-item" style={{ '--c': e.color } as CSSProperties} onClick={() => { setKey(g.key); setPicked(true); }}>
-                <span className="bubble" aria-hidden>{g.icon}</span>
-                <span className="grow"><strong>{g.name}</strong>
-                  <span className="small muted" style={{ display: 'block' }}>{e.emoji} {e.label} · {g.why}</span></span>
-              </button>
-            );
-          })}
-        </div>
+      <div className="stack" style={{ maxWidth: 860 }}>
+        <p className="muted mb0">{t('Elige un juego. Hay cuatro pensados para cada emoción.')}</p>
+        {order.map((k) => {
+          const e = EMOTION_BY_KEY[k];
+          return (
+            <section key={k} className="stack" style={{ gap: 8 }}>
+              <h3 className="mb0" style={{ color: e.color }}>{e.emoji} {k === emotion ? t('Para cómo te sientes ahora') : e.label}</h3>
+              <div className="grid grid-2">
+                {GAMES_FOR_EMOTION[k].map((g) => (
+                  <button key={g.key} className="list-item" style={{ '--c': e.color } as CSSProperties} onClick={() => choose(g)}>
+                    <span className="bubble" aria-hidden>{g.icon}</span>
+                    <span className="grow"><strong>{g.name}</strong>
+                      <span className="small muted" style={{ display: 'block' }}>{g.why}</span></span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     );
   }

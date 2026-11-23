@@ -64,7 +64,7 @@ create table if not exists public.activities (
 );
 
 insert into public.activities (id, key, name, description, base_xp, min_duration_sec) values
-  (1, 'minigame',   'Minijuego',          'Un juego distinto para cada emoción.',                     30, 20),
+  (1, 'minigame',   'Minijuego',          'Cuatro juegos pensados para cada emoción.',                     30, 20),
   (2, 'journaling', 'Diario emocional',   'Escribe cómo te sientes con una guía según tu emoción.',      40, 0),
   (3, 'meditation', 'Meditación guiada',  'Respiración guiada con temporizador circular.',               50, 60),
   (4, 'music',      'Música',             'Playlist de Spotify curada para tu estado de ánimo.',         25, 60)

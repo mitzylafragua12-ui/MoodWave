@@ -54,6 +54,9 @@ const fill = (text: string, vars?: Vars) =>
   vars ? text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : text;
 
 /** Traduce un texto (con variables `{nombre}`). */
+/** Marca un texto para traducir más tarde con t() (listas de datos). La prueba i18n lo revisa. */
+export const tm = (es: string) => es;
+
 export function t(es: string, vars?: Vars): string {
   if (current === 'es') return fill(es, vars);
   const loc = LOCALES[current];

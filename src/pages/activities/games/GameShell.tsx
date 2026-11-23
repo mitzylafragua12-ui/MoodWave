@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { EMOTION_BY_KEY } from '../../../lib/catalog';
 import type { CompletionInput } from '../../../lib/types';
 import type { GameDef } from './types';
+import { markPlayed } from './index';
 import { t } from '../../../i18n';
 
 type State = 'ready' | 'countdown' | 'playing' | 'over';
@@ -22,7 +23,7 @@ export function GameShell({ game, autoStart, busy, onComplete, onPickOther }: {
   const total = useRef(0);
   const scoreRef = useRef(0);
 
-  const addScore = useCallback((n: number) => { scoreRef.current += n; setScore(scoreRef.current); }, []);
+  const addScore = useCallback((n: number) => { scoreRef.current = Math.max(0, scoreRef.current + n); setScore(scoreRef.current); }, []);
   const say = useCallback((text: string) => setMsg({ id: Date.now() + Math.random(), text }), []);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export function GameShell({ game, autoStart, busy, onComplete, onPickOther }: {
   useEffect(() => {
     if (state !== 'playing') return;
     scoreRef.current = 0; setScore(0); setLeft(game.seconds); setRound((r) => r + 1);
+    markPlayed(game.key);
     const end = Date.now() + game.seconds * 1000;
     const id = setInterval(() => {
       const l = Math.max(0, Math.ceil((end - Date.now()) / 1000));

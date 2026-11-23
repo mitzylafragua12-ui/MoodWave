@@ -4,7 +4,7 @@ import { useProfile } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { useAsync } from '../lib/useAsync';
 import { ACTIVITY_BY_KEY, EMOTIONS, RECOMMENDATIONS, ROLES, ROLE_BY_KEY, can, rolePanelLabel } from '../lib/catalog';
-import { GAME_FOR_EMOTION } from './activities/games';
+import { GAMES_FOR_EMOTION } from './activities/games';
 import { LEVEL_NAMES, levelProgress } from '../lib/gamification';
 import { fmtDateTime } from '../lib/date';
 import { EmotionChip, ErrorBox, PageHead, ProgressBar, RoleChip, Spinner } from '../components/ui';
@@ -170,15 +170,15 @@ function CuratorWidget() {
   return (
     <Widget title={t('Contenido por emoción')} icon="🎵" to="/curaduria" cta={t('Editar música')} color="var(--green)">
       <div className="table-wrap"><table>
-        <thead><tr><th>{t('Emoción')}</th><th>{t('Actividad principal')}</th><th>{t('Juego')}</th><th>{t('Playlist')}</th></tr></thead>
+        <thead><tr><th>{t('Emoción')}</th><th>{t('Actividad principal')}</th><th>{t('Juegos')}</th><th>{t('Playlist')}</th></tr></thead>
         <tbody>{EMOTIONS.map((e) => {
           const act = ACTIVITY_BY_KEY[RECOMMENDATIONS[e.key][0][0]];
-          const g = GAME_FOR_EMOTION[e.key];
+          const games = GAMES_FOR_EMOTION[e.key];
           return (
             <tr key={e.key}>
               <td><EmotionChip emotion={e.key} /></td>
               <td className="small">{act.icon} {act.name}</td>
-              <td className="small">{g.icon} {g.name}</td>
+              <td className="small" title={games.map((g) => g.name).join(' · ')}>{games.map((g) => g.icon).join(' ')} <span className="muted">{t('{n} juegos', { n: games.length })}</span></td>
               <td className="small muted">{data?.find((p) => p.emotion === e.key)?.title ?? '…'}</td>
             </tr>
           );

@@ -21,7 +21,7 @@ export interface ActivityInfo {
   base_xp: number; min_duration_sec: number; color: string; icon: string;
 }
 export const ACTIVITIES: ActivityInfo[] = ([
-  { id: 1, key: 'minigame', name: 'Minijuego', description: 'Un juego distinto para cada emoción.', base_xp: 30, min_duration_sec: 20, color: '#22d3ee', icon: '🎮' },
+  { id: 1, key: 'minigame', name: 'Minijuego', description: 'Cuatro juegos pensados para cada emoción.', base_xp: 30, min_duration_sec: 20, color: '#22d3ee', icon: '🎮' },
   { id: 2, key: 'journaling', name: 'Diario emocional', description: 'Escribe cómo te sientes con una guía según tu emoción.', base_xp: 40, min_duration_sec: 0, color: '#a78bfa', icon: '✍️' },
   { id: 3, key: 'meditation', name: 'Meditación guiada', description: 'Respiración guiada con temporizador circular.', base_xp: 50, min_duration_sec: 60, color: '#38bdf8', icon: '🧘' },
   { id: 4, key: 'music', name: 'Música', description: 'Playlist de Spotify curada para tu estado de ánimo.', base_xp: 25, min_duration_sec: 60, color: '#f43f5e', icon: '🎧' },
