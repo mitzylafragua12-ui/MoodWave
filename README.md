@@ -6,6 +6,14 @@ Proyecto de la asignatura *Arquitectura de Software* — Ing. en Desarrollo y Ge
 
 ---
 
+## Documentación del proyecto
+
+En [`docs/`](docs/) están los entregables académicos:
+
+- **[`MoodWave_Documentacion.docx`](docs/MoodWave_Documentacion.docx)**: documento Word de 106 páginas con los **41 entregables** en orden: planteamiento, requisitos, historias de usuario, backlog, sprints, mapa del sitio, diagramas de flujo, wireframes, guía de estilos, arquitectura, modelo ER, diccionario de datos (generado de la base real), seguridad, pruebas, errores, evidencias por rol, manuales técnico y de usuario, conclusiones y mejoras. El Anexo A es `schema.sql` completo. La portada tiene campos `[entre corchetes]` para llenar con los datos del equipo.
+- **[`video/MoodWave-promo.mp4`](docs/video/MoodWave-promo.mp4)**: video promocional de 1 min 5 s (1080p) grabado de la app real.
+- **[`img/`](docs/img/)**: diagramas, wireframes y capturas usados en el documento.
+
 ## Puesta en marcha
 
 ### Opción recomendada: Docker (en tu computadora)
